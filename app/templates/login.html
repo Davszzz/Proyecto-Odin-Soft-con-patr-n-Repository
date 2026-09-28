@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}
+Iniciar sesión | Odin Soft
+{% endblock %}
+
+
+{% block content %}
+
+<div class="auth-page">
+
+    <div class="auth-card">
+
+        <div class="card odin-card">
+
+            <div class="card-body p-5">
+
+                <div class="text-center mb-4">
+
+                    <img
+                        src="{{ url_for('static', filename='img/odinsoft-logo.png') }}"
+                        alt="Odin Soft"
+                        class="auth-logo"
+                    >
+
+                </div>
+
+
+                <form method="POST">
+
+                    <div class="mb-3">
+
+                        <label
+                            for="email"
+                            class="form-label"
+                        >
+                            Correo electrónico
+                        </label>
+
+                        <div class="input-group">
+
+                            <span class="input-group-text bg-white">
+                                <i class="bi bi-envelope"></i>
+                            </span>
+
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                class="form-control"
+                                placeholder="correo@ejemplo.com"
+                                autocomplete="email"
+                                required
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="mb-4">
+
+                        <label
+                            for="password"
+                            class="form-label"
+                        >
+                            Contraseña
+                        </label>
+
+                        <div class="input-group">
+
+                            <span class="input-group-text bg-white">
+                                <i class="bi bi-lock"></i>
+                            </span>
+
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                class="form-control"
+                                placeholder="Ingrese su contraseña"
+                                autocomplete="current-password"
+                                required
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <button
+                        type="submit"
+                        class="btn btn-odin w-100"
+                    >
+                        <i class="bi bi-box-arrow-in-right me-1"></i>
+                        Iniciar sesión
+                    </button>
+
+                </form>
+
+
+                <div class="text-center mt-4">
+
+                    <span class="text-muted">
+                        ¿Todavía no tiene una cuenta?
+                    </span>
+
+                    <a
+                        href="{{ url_for('auth.register') }}"
+                        class="text-decoration-none fw-semibold ms-1"
+                    >
+                        Crear cuenta
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

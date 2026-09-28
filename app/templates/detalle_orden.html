@@ -1,0 +1,355 @@
+{% extends "base.html" %}
+
+{% block title %}
+Orden #{{ order.order_number }} | Odin Soft
+{% endblock %}
+
+{% block content %}
+
+
+<div class="mb-4">
+
+    <a
+        href="{{ url_for('orders.list_orders') }}"
+        class="text-decoration-none fw-semibold"
+    >
+        <i class="bi bi-arrow-left me-1"></i>
+        Volver a mis órdenes
+    </a>
+
+</div>
+
+
+<div class="page-header">
+
+    <div>
+
+        <h2>
+            Orden #{{ order.order_number }}
+        </h2>
+
+        <p>
+            Detalle de la solicitud de servicio técnico.
+        </p>
+
+    </div>
+
+
+    <div>
+
+        {% if order.order_statuses.code == "COMPLETED" %}
+
+        <span class="status-badge status-completed">
+            {{ order.order_statuses.name }}
+        </span>
+
+        {% elif order.order_statuses.code == "CANCELLED" %}
+
+        <span class="status-badge status-cancelled">
+            {{ order.order_statuses.name }}
+        </span>
+
+        {% elif order.order_statuses.code == "IN_PROGRESS" %}
+
+        <span class="status-badge status-progress">
+            {{ order.order_statuses.name }}
+        </span>
+
+        {% elif order.order_statuses.code == "REVIEW" %}
+
+        <span class="status-badge status-review">
+            {{ order.order_statuses.name }}
+        </span>
+
+        {% else %}
+
+        <span class="status-badge status-registered">
+            {{ order.order_statuses.name }}
+        </span>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+<div class="row g-4">
+
+
+    <!-- SERVICIO -->
+
+    <div class="col-lg-6">
+
+        <div class="section-card h-100">
+
+            <div class="section-card-header">
+
+                <div class="section-icon">
+                    <i class="bi bi-tools"></i>
+                </div>
+
+                <h5>
+                    Información del servicio
+                </h5>
+
+            </div>
+
+
+            <div class="section-card-body">
+
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Tipo de servicio
+                    </div>
+
+                    <div class="detail-value">
+                        {{ order.service_types.name }}
+                    </div>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Nivel de urgencia
+                    </div>
+
+                    <div class="detail-value">
+                        {{ order.urgency_levels.name }}
+                    </div>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Fecha de registro
+                    </div>
+
+                    <div class="detail-value">
+                        {{ order.created_at|date_pe }}
+                    </div>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Descripción del problema
+                    </div>
+
+                    <div class="detail-value">
+                        {{ order.problem_description }}
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- EQUIPO -->
+
+    <div class="col-lg-6">
+
+        <div class="section-card h-100">
+
+            <div class="section-card-header">
+
+                <div class="section-icon">
+                    <i class="bi bi-pc-display"></i>
+                </div>
+
+                <h5>
+                    Equipo
+                </h5>
+
+            </div>
+
+
+            <div class="section-card-body">
+
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Tipo de equipo
+                    </div>
+
+                    <div class="detail-value">
+                        {{ order.equipment.equipment_types.name }}
+                    </div>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Marca
+                    </div>
+
+                    <div class="detail-value">
+                        {{ order.equipment.brand or "No especificada" }}
+                    </div>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Modelo
+                    </div>
+
+                    <div class="detail-value">
+                        {{ order.equipment.model or "No especificado" }}
+                    </div>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Número de serie
+                    </div>
+
+                    <div class="detail-value">
+                        {{ order.equipment.serial_number or "No especificado" }}
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ADICIONALES -->
+
+    <div class="col-lg-6">
+
+        <div class="section-card h-100">
+
+            <div class="section-card-header">
+
+                <div class="section-icon">
+                    <i class="bi bi-plus-square"></i>
+                </div>
+
+                <h5>
+                    Servicios adicionales
+                </h5>
+
+            </div>
+
+
+            <div class="section-card-body">
+
+                {% if order.order_additional_services %}
+
+                    {% for item in order.order_additional_services %}
+
+                    <span class="additional-chip">
+
+                        <i class="bi bi-check2 me-1"></i>
+
+                        {{ item.additional_services.name }}
+
+                    </span>
+
+                    {% endfor %}
+
+                {% else %}
+
+                <p class="text-muted mb-0">
+                    Esta orden no incluye servicios adicionales.
+                </p>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- HISTORIAL -->
+
+    <div class="col-lg-6">
+
+        <div class="section-card h-100">
+
+            <div class="section-card-header">
+
+                <div class="section-icon">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+
+                <h5>
+                    Historial de estados
+                </h5>
+
+            </div>
+
+
+            <div class="section-card-body">
+
+                {% if order.order_status_history %}
+
+                    {% for history in order.order_status_history %}
+
+                    <div class="timeline-item">
+
+                        <div class="timeline-dot"></div>
+
+                        <div class="fw-bold">
+                            {{ history.order_statuses.name }}
+                        </div>
+
+                        <div class="text-muted small mb-1">
+                            {{ history.changed_at|datetime_pe }}
+                        </div>
+
+                        {% if history.notes %}
+
+                        <div>
+                            {{ history.notes }}
+                        </div>
+
+                        {% endif %}
+
+                    </div>
+
+                    {% endfor %}
+
+                {% else %}
+
+                <p class="text-muted mb-0">
+                    No existe historial para esta orden.
+                </p>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+</div>
+
+
+{% endblock %}

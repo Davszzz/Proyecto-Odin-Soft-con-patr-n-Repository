@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}
+Mis órdenes | Odin Soft
+{% endblock %}
+
+{% block content %}
+
+
+<div class="page-header">
+
+    <div>
+
+        <h2>
+            Mis órdenes
+        </h2>
+
+        <p>
+            Consulte sus solicitudes de servicio técnico.
+        </p>
+
+    </div>
+
+    <a
+        href="{{ url_for('orders.new_order') }}"
+        class="btn btn-odin"
+    >
+        <i class="bi bi-plus-lg me-1"></i>
+        Nueva orden
+    </a>
+
+</div>
+
+
+{% if orders %}
+
+<div class="section-card">
+
+    <div class="table-responsive">
+
+        <table class="table odin-table align-middle">
+
+            <thead>
+
+                <tr>
+
+                    <th>N.º Orden</th>
+                    <th>Servicio</th>
+                    <th>Equipo</th>
+                    <th>Urgencia</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                    <th></th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for order in orders %}
+
+                <tr>
+
+                    <td>
+
+                        <span class="order-number">
+                            #{{ order.order_number }}
+                        </span>
+
+                    </td>
+
+
+                    <td>
+                        {{ order.service_types.name }}
+                    </td>
+
+
+                    <td>
+
+                        <div class="order-device">
+                            {{ order.equipment.equipment_types.name }}
+                        </div>
+
+                        {% if order.equipment.brand %}
+
+                        <div class="order-device-detail">
+
+                            {{ order.equipment.brand }}
+
+                            {{ order.equipment.model or "" }}
+
+                        </div>
+
+                        {% endif %}
+
+                    </td>
+
+
+                    <td>
+                        {{ order.urgency_levels.name }}
+                    </td>
+
+
+                    <td>
+
+                        {% if order.order_statuses.code == "COMPLETED" %}
+
+                        <span class="status-badge status-completed">
+                            {{ order.order_statuses.name }}
+                        </span>
+
+                        {% elif order.order_statuses.code == "CANCELLED" %}
+
+                        <span class="status-badge status-cancelled">
+                            {{ order.order_statuses.name }}
+                        </span>
+
+                        {% elif order.order_statuses.code == "IN_PROGRESS" %}
+
+                        <span class="status-badge status-progress">
+                            {{ order.order_statuses.name }}
+                        </span>
+
+                        {% elif order.order_statuses.code == "REVIEW" %}
+
+                        <span class="status-badge status-review">
+                            {{ order.order_statuses.name }}
+                        </span>
+
+                        {% else %}
+
+                        <span class="status-badge status-registered">
+                            {{ order.order_statuses.name }}
+                        </span>
+
+                        {% endif %}
+
+                    </td>
+
+
+                    <td>
+                        {{ order.created_at|date_pe }}
+                    </td>
+
+
+                    <td class="text-end">
+
+                        <a
+                            href="{{ url_for('orders.order_detail', order_id=order.id) }}"
+                            class="btn btn-sm btn-odin-outline"
+                        >
+                            Ver detalle
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+{% else %}
+
+
+<div class="section-card">
+
+    <div class="empty-state">
+
+        <div class="empty-icon">
+            <i class="bi bi-clipboard"></i>
+        </div>
+
+        <h4>
+            Aún no tiene órdenes
+        </h4>
+
+        <p class="text-muted">
+            Registre su primera solicitud de servicio técnico.
+        </p>
+
+        <a
+            href="{{ url_for('orders.new_order') }}"
+            class="btn btn-odin mt-2"
+        >
+            Crear primera orden
+        </a>
+
+    </div>
+
+</div>
+
+
+{% endif %}
+
+
+{% endblock %}

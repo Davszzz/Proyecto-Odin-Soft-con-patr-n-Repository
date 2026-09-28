@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        {% block title %}
+        Odin Soft
+        {% endblock %}
+    </title>
+
+
+    <!-- Favicon -->
+
+    <link
+        rel="icon"
+        type="image/png"
+        href="{{ url_for('static', filename='img/odinsoft-logo.png') }}"
+    >
+
+
+    <!-- Bootstrap -->
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+
+    <!-- Bootstrap Icons -->
+
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    >
+
+
+    <!-- Odin Soft -->
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/styles.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+
+{% if session.get("user_id") %}
+
+<nav class="navbar navbar-expand-lg odin-navbar">
+
+    <div class="container">
+
+        <!-- LOGO -->
+
+        <a
+            class="navbar-brand"
+            href="{{ url_for('index') }}"
+        >
+
+            <img
+                src="{{ url_for('static', filename='img/odinsoft-logo.png') }}"
+                alt="Odin Soft"
+                class="odin-navbar-logo"
+            >
+
+        </a>
+
+
+        <!-- BOTÓN MOBILE -->
+
+        <button
+            class="navbar-toggler navbar-dark"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#odinNavbar"
+            aria-controls="odinNavbar"
+            aria-expanded="false"
+            aria-label="Mostrar navegación"
+        >
+
+            <span class="navbar-toggler-icon"></span>
+
+        </button>
+
+
+        <!-- NAVEGACIÓN -->
+
+        <div
+            class="collapse navbar-collapse"
+            id="odinNavbar"
+        >
+
+            <div class="navbar-nav ms-auto align-items-lg-center">
+
+
+                <!-- INICIO -->
+
+                <a
+                    href="{{ url_for('index') }}"
+                    class="nav-link
+                    {% if request.endpoint == 'index' %}
+                        active
+                    {% endif %}"
+                >
+
+                    <i class="bi bi-house me-1"></i>
+
+                    Inicio
+
+                </a>
+
+
+                <!-- NUEVA ORDEN -->
+
+                <a
+                    href="{{ url_for('orders.new_order') }}"
+                    class="nav-link
+                    {% if request.endpoint == 'orders.new_order' %}
+                        active
+                    {% endif %}"
+                >
+
+                    <i class="bi bi-plus-circle me-1"></i>
+
+                    Nueva orden
+
+                </a>
+
+
+                <!-- MIS ÓRDENES -->
+
+                <a
+                    href="{{ url_for('orders.list_orders') }}"
+                    class="nav-link
+                    {% if request.endpoint in [
+                        'orders.list_orders',
+                        'orders.order_detail'
+                    ] %}
+                        active
+                    {% endif %}"
+                >
+
+                    <i class="bi bi-card-checklist me-1"></i>
+
+                    Mis órdenes
+
+                </a>
+
+
+                <!-- USUARIO -->
+
+                <div class="ms-lg-3 me-lg-3 odin-user-name">
+
+                    <i class="bi bi-person-circle me-1"></i>
+
+                    {{ session.get("user_name") }}
+
+                </div>
+
+
+                <!-- LOGOUT -->
+
+                <a
+                    href="{{ url_for('auth.logout') }}"
+                    class="btn btn-light-outline btn-sm"
+                >
+
+                    <i class="bi bi-box-arrow-right me-1"></i>
+
+                    Cerrar sesión
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</nav>
+
+{% endif %}
+
+
+<!-- CONTENIDO PRINCIPAL -->
+
+<main
+    class="
+    {% if session.get('user_id') %}
+        app-main
+    {% else %}
+        auth-main
+    {% endif %}
+    "
+>
+
+
+    {% if session.get("user_id") %}
+
+    <div class="container">
+
+    {% endif %}
+
+
+        <!-- MENSAJES FLASH -->
+
+        {% with messages = get_flashed_messages(
+            with_categories=true
+        ) %}
+
+            {% if messages %}
+
+                {% for category, message in messages %}
+
+                    <div
+                        class="alert alert-{{ category }} alert-dismissible fade show"
+                        role="alert"
+                    >
+
+                        {{ message }}
+
+                        <button
+                            type="button"
+                            class="btn-close"
+                            data-bs-dismiss="alert"
+                            aria-label="Cerrar"
+                        ></button>
+
+                    </div>
+
+                {% endfor %}
+
+            {% endif %}
+
+        {% endwith %}
+
+
+        <!-- CONTENIDO DE CADA VISTA -->
+
+        {% block content %}
+        {% endblock %}
+
+
+    {% if session.get("user_id") %}
+
+    </div>
+
+    {% endif %}
+
+
+</main>
+
+
+<!-- Bootstrap JS -->
+
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+</script>
+
+
+</body>
+
+</html>
