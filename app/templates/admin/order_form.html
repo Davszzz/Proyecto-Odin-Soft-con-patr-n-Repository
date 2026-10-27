@@ -1,0 +1,84 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ 'Editar orden' if editing else 'Nueva orden' }}{% endblock %}
+{% block content %}
+<div class="admin-page-title mb-4"><a class="ui-back-link" href="{{ url_for('admin.orders') }}"><i
+      class="bi bi-arrow-left me-1"></i> Volver a órdenes</a>
+  <h1>{{ 'Editar orden #' ~ order.order_number if editing else 'Nueva orden' }}</h1>
+  <p>{{ 'Modifique los datos del servicio. El estado se actualiza desde el detalle de la orden.' if editing else
+    'Registre una nueva solicitud en nombre de un cliente.' }}</p>
+</div>
+<form method="post"><input type="hidden" name="csrf_token" value="{{ session.admin_csrf_token }}">
+  <div class="row g-4">
+    <div class="col-xl-7">
+      <div class="ui-surface p-4 h-100">
+        <h2 class="form-section-title"><i class="bi bi-clipboard2-pulse text-primary me-2"></i>Datos del servicio</h2>
+        <div class="row g-3">
+          <div class="col-12"><label for="user_id" class="form-label">Cliente *</label>
+            {% if editing %}<input class="form-control"
+              value="{{ (order.users or {}).full_name or '—' }} — {{ (order.users or {}).email or '' }}" disabled>
+            <div class="form-text">El cliente no puede cambiarse después del registro.</div>
+            {% else %}<select class="form-select" id="user_id" name="user_id" required>
+              <option value="">Seleccione un usuario...</option>{% for user in users %}<option value="{{ user.id }}" {%
+                if request.form.get('user_id')==user.id %}selected{% endif %}>{{ user.full_name }} — {{ user.email }}
+              </option>{% endfor %}
+            </select>{% endif %}
+          </div>
+          <div class="col-md-6"><label for="service_type_id" class="form-label">Tipo de servicio *</label>{% set
+            service_id = request.form.get('service_type_id', order.service_type_id if editing else '') %}<select
+              class="form-select" id="service_type_id" name="service_type_id" required>
+              <option value="">Seleccione...</option>{% for row in catalogs.service_types %}<option value="{{ row.id }}"
+                {% if service_id|string==row.id|string %}selected{% endif %}>{{ row.name }}</option>{% endfor %}
+            </select></div>
+          <div class="col-md-6"><label for="urgency_level_id" class="form-label">Urgencia *</label>{% set urgency_id =
+            request.form.get('urgency_level_id', order.urgency_level_id if editing else '') %}<select
+              class="form-select" id="urgency_level_id" name="urgency_level_id" required>
+              <option value="">Seleccione...</option>{% for row in catalogs.urgency_levels %}<option
+                value="{{ row.id }}" {% if urgency_id|string==row.id|string %}selected{% endif %}>{{ row.name }}
+              </option>{% endfor %}
+            </select></div>
+          <div class="col-12"><label for="problem_description" class="form-label">Descripción del problema
+              *</label><textarea class="form-control" id="problem_description" name="problem_description" rows="5"
+              required>{{ request.form.get('problem_description', order.problem_description if editing else '') }}</textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-5">
+      <div class="ui-surface p-4 mb-4">
+        <h2 class="form-section-title"><i class="bi bi-pc-display text-primary me-2"></i>Equipo</h2>
+        <div class="row g-3">
+          {% if not editing %}<div class="col-12"><label for="equipment_type_id" class="form-label">Tipo de equipo
+              *</label><select name="equipment_type_id" id="equipment_type_id" class="form-select" required>
+              <option value="">Seleccione...</option>{% for row in catalogs.equipment_types %}<option
+                value="{{ row.id }}" {% if request.form.get('equipment_type_id')==row.id|string %}selected{% endif %}>{{
+                row.name }}</option>{% endfor %}
+            </select></div>{% else %}<div class="col-12"><label class="form-label">Tipo de equipo</label><input
+              class="form-control" value="{{ ((order.equipment or {}).equipment_types or {}).name or '—' }}" disabled>
+          </div>{% endif %}
+          <div class="col-md-6"><label class="form-label" for="brand">Marca</label><input class="form-control"
+              id="brand" name="brand" maxlength="150"
+              value="{{ request.form.get('brand', (order.equipment or {}).brand if editing else '') or '' }}"></div>
+          <div class="col-md-6"><label class="form-label" for="model">Modelo</label><input class="form-control"
+              id="model" name="model" maxlength="150"
+              value="{{ request.form.get('model', (order.equipment or {}).model if editing else '') or '' }}"></div>
+          <div class="col-12"><label class="form-label" for="serial_number">Número de serie</label><input
+              class="form-control" id="serial_number" name="serial_number" maxlength="150"
+              value="{{ request.form.get('serial_number', (order.equipment or {}).serial_number if editing else '') or '' }}">
+          </div>
+        </div>
+      </div>
+      {% if not editing %}<div class="ui-surface p-4">
+        <h2 class="form-section-title"><i class="bi bi-plus-square text-primary me-2"></i>Servicios adicionales</h2>
+        <p class="small text-muted mb-3">Puede elegir varios servicios complementarios.</p>
+        {% for row in catalogs.additional_services %}<div class="form-check mb-2"><input class="form-check-input"
+            name="additional_services" type="checkbox" value="{{ row.id }}" id="extra_{{ row.id }}" {% if row.id in
+            request.form.getlist('additional_services') %}checked{% endif %}><label class="form-check-label"
+            for="extra_{{ row.id }}">{{ row.name }}</label></div>{% endfor %}
+      </div>{% endif %}
+    </div>
+  </div>
+  <div class="ui-form-actions"><a class="btn btn-outline-secondary"
+      href="{{ url_for('admin.orders') }}">Cancelar</a><button type="submit" class="btn btn-primary"><i
+        class="bi bi-check2-circle me-1"></i>{{ 'Guardar cambios' if editing else 'Crear orden' }}</button></div>
+</form>
+{% endblock %}

@@ -14,6 +14,10 @@ from flask import (
 
 from app.routes.auth_routes import auth_bp
 from app.routes.order_routes import orders_bp
+from app.routes.admin_routes import admin_bp
+from app.routes.admin_catalog_routes import admin_catalog_bp
+from app.routes.admin_material_routes import admin_material_bp
+from app.routes.admin_sales_routes import admin_sales_bp
 
 
 load_dotenv()
@@ -97,6 +101,22 @@ def create_app():
         orders_bp
     )
 
+    app.register_blueprint(
+        admin_bp
+    )
+
+    app.register_blueprint(
+        admin_catalog_bp
+    )
+
+    app.register_blueprint(
+        admin_material_bp
+    )
+
+    app.register_blueprint(
+        admin_sales_bp
+    )
+
     @app.route("/")
     def index():
 
@@ -105,8 +125,11 @@ def create_app():
                 url_for("auth.login")
             )
 
-        return render_template(
-            "index.html"
-        )
+        if session.get("user_role") == "ADMIN":
+            return redirect(
+                url_for("admin.dashboard")
+            )
 
+        return render_template("index.html")
+    
     return app

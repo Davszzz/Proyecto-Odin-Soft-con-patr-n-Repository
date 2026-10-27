@@ -1,0 +1,91 @@
+{% extends "admin/base.html" %} {% from 'admin/_ui_actions.html' import
+action_link, action_post with context %} {% block title %}Órdenes{% endblock %}
+{% block content %}
+<header class="ui-page-title">
+  <div>
+    <div class="ui-eyebrow">Gestión de servicios</div>
+    <h1>Órdenes de servicio</h1>
+    <p>Consulta y administra las solicitudes de todos los clientes.</p>
+  </div>
+  <div class="ui-page-actions">
+    <a class="btn btn-primary" href="{{ url_for('admin.new_order') }}"><i class="bi bi-plus-lg" aria-hidden="true"></i>
+      Nueva orden</a>
+  </div>
+</header>
+<section class="ui-surface" aria-label="Listado de órdenes">
+  <div class="ui-surface__head">
+    <div>
+      <h2>Listado de órdenes</h2>
+      <p>{{ orders|length }} registros encontrados</p>
+    </div>
+    <label class="ui-search"><i class="bi bi-search" aria-hidden="true"></i><span class="visually-hidden">Buscar
+        órdenes</span><input class="form-control" type="search" placeholder="Buscar orden o cliente"
+        data-ui-search="orderTable" /></label>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover ui-table" id="orderTable">
+      <thead>
+        <tr>
+          <th>Orden</th>
+          <th>Cliente</th>
+          <th>Equipo</th>
+          <th>Servicio</th>
+          <th>Prioridad</th>
+          <th>Estado</th>
+          <th>Fecha</th>
+          <th class="text-end">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td>
+            <strong class="text-primary">#{{ order.order_number }}</strong>
+          </td>
+          <td>
+            <div class="ui-title-cell">
+              {{ (order.users or {}).full_name or '—' }}
+            </div>
+            <div class="ui-subline">{{ (order.users or {}).email or '' }}</div>
+          </td>
+          <td>
+            {{ ((order.equipment or {}).equipment_types or {}).name or '—' }}
+            <div class="ui-subline">
+              {{ (order.equipment or {}).brand or '' }} {{ (order.equipment or
+              {}).model or '' }}
+            </div>
+          </td>
+          <td>{{ (order.service_types or {}).name or '—' }}</td>
+          <td>{{ (order.urgency_levels or {}).name or '—' }}</td>
+          <td>
+            <span class="status-pill status-{{ (order.order_statuses or {}).code or 'REGISTERED' }}">{{
+              (order.order_statuses or {}).name or '—' }}</span>
+          </td>
+          <td>{{ order.created_at|date_pe }}</td>
+          <td class="text-end">
+            <div class="ui-action-group">
+              {{ action_post(url_for('admin.open_order_for_review', order_id=order.id),
+              'eye', 'Ver y revisar orden', 'view') }}{{
+              action_link(url_for('admin.edit_order', order_id=order.id),
+              'pencil-square', 'Editar orden', 'edit') }}{{
+              action_post(url_for('admin.delete_order', order_id=order.id),
+              'trash3', 'Eliminar orden', 'danger', '¿Eliminar la orden #' ~
+              order.order_number ~ '? También se eliminará su historial.') }}
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8">
+            <div class="ui-empty">
+              <span class="ui-empty__icon"><i class="bi bi-clipboard2-check"></i></span><strong>Sin órdenes</strong>No
+              se han registrado órdenes todavía.
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

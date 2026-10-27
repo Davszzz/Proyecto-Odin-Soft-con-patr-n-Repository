@@ -139,3 +139,12 @@ class OrderService:
                 user_id
             )
         )    
+
+    def confirm_service_received(self, order_id, user_id):
+        order = self.order_repository.get_by_id_and_user(order_id, user_id)
+        if not order:
+            raise ValueError("La orden no existe o no te pertenece.")
+        status = (order.get("order_statuses") or {}).get("code")
+        if status not in ("REVIEW", "IN_PROGRESS"):
+            raise ValueError("Esta orden no admite confirmación de recepción en su etapa actual.")
+        return self.order_repository.confirm_service_received(order_id, user_id)

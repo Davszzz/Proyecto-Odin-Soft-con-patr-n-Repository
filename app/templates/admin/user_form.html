@@ -1,0 +1,120 @@
+{% extends "admin/base.html" %} {% block title %}{{ 'Editar' if editing else
+'Nuevo' }} usuario{% endblock %} {% block content %}
+<div class="admin-page-title mb-4">
+  <a class="ui-back-link" href="{{ url_for('admin.users') }}"
+    ><i class="bi bi-arrow-left me-1"></i> Volver a usuarios</a
+  >
+  <h1>{{ 'Editar usuario' if editing else 'Nuevo usuario' }}</h1>
+  <p>Complete los datos de acceso y perfil.</p>
+</div>
+<div class="row">
+  <div class="col-xxl-8">
+    <div class="ui-surface p-4 p-lg-5">
+      <form method="post" autocomplete="off">
+        <input
+          type="hidden"
+          name="csrf_token"
+          value="{{ session.admin_csrf_token }}"
+        />
+        <div class="row g-4">
+          <div class="col-md-6">
+            <label class="form-label" for="full_name">Nombre completo *</label
+            ><input
+              id="full_name"
+              name="full_name"
+              class="form-control"
+              maxlength="150"
+              value="{{ request.form.get('full_name', user.full_name if user else '') }}"
+              required
+            />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="email">Correo electrónico *</label
+            ><input
+              id="email"
+              name="email"
+              type="email"
+              class="form-control"
+              maxlength="254"
+              value="{{ request.form.get('email', user.email if user else '') }}"
+              required
+            />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="phone">Teléfono</label
+            ><input
+              id="phone"
+              name="phone"
+              class="form-control"
+              maxlength="30"
+              value="{{ request.form.get('phone', user.phone if user else '') }}"
+            />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="role">Rol *</label>{% set role_value
+            = request.form.get('role', user.role if user else 'CLIENT')
+            %}<select id="role" name="role" class="form-select" required>
+              <option
+                value="CLIENT"
+                {%
+                if
+                role_value=="CLIENT"
+                %}selected{%
+                endif
+                %}
+              >
+                Cliente
+              </option>
+              <option
+                value="ADMIN"
+                {%
+                if
+                role_value=="ADMIN"
+                %}selected{%
+                endif
+                %}
+              >
+                Administrador
+              </option>
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="password"
+              >{{ 'Cambiar contraseña (opcional)' if editing else 'Contraseña *'
+              }}</label
+            ><input
+              id="password"
+              name="password"
+              type="password"
+              class="form-control"
+              minlength="8"
+              {%
+              if
+              not
+              editing
+              %}required{%
+              endif
+              %}
+              autocomplete="new-password"
+            />
+            <div class="form-text">
+              Mínimo 8 caracteres. {% if editing %}Déjela vacía para conservar
+              la contraseña actual.{% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="ui-form-actions">
+          <a
+            href="{{ url_for('admin.users') }}"
+            class="btn btn-outline-secondary"
+            >Cancelar</a
+          ><button type="submit" class="btn btn-primary">
+            <i class="bi bi-check2-circle me-1"></i> {{ 'Guardar cambios' if
+            editing else 'Crear usuario' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

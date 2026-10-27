@@ -1,0 +1,88 @@
+{% extends 'admin/base.html' %} {% from 'admin/_ui_actions.html' import
+action_link with context %} {% block title %}Ventas{% endblock %} {% block
+content %}
+<header class="ui-page-title">
+  <div>
+    <div class="ui-eyebrow">Proceso comercial · Venta</div>
+    <h1>Ventas</h1>
+    <p>
+      Cada venta proviene de una SOLPED revisada; sus conceptos y precios se
+      conservan.
+    </p>
+  </div>
+  <div class="ui-page-actions">
+    <a
+      class="btn btn-outline-primary"
+      href="{{ url_for('admin_sales.sales_requests') }}"
+      ><i class="bi bi-file-earmark-plus"></i> Ver solicitudes</a
+    >
+  </div>
+</header>
+<section class="ui-surface">
+  <div class="ui-surface__head">
+    <div>
+      <h2>Listado de ventas</h2>
+      <p>{{ records|length }} registros</p>
+    </div>
+    <label class="ui-search"
+      ><i class="bi bi-search"></i
+      ><span class="visually-hidden">Buscar ventas</span
+      ><input
+        class="form-control"
+        type="search"
+        placeholder="Número o estado"
+        data-ui-search="commercialSalesTable"
+    /></label>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover ui-table" id="commercialSalesTable">
+      <thead>
+        <tr>
+          <th>Venta</th>
+          <th>Solicitud origen</th>
+          <th>Estado</th>
+          <th>Registro</th>
+          <th class="text-end">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for sale in records %}
+        <tr>
+          <td class="ui-title-cell">
+            VTA-{{ '%05d'|format(sale.sale_number|int) }}
+          </td>
+          <td>
+            SOLPED-{{ '%05d'|format(sale.sales_requests.request_number|int) if
+            sale.sales_requests else '—' }}
+          </td>
+          <td>
+            <span
+              class="ui-state {{ 'ui-state--active' if sale.status == 'CONFIRMADA' else 'ui-state--inactive' if sale.status == 'CANCELADA' else 'ui-state--low' }}"
+              >{{ sale.status|capitalize }}</span
+            >
+          </td>
+          <td>{{ sale.created_at|date_pe }}</td>
+          <td class="text-end">
+            <div class="ui-action-group">
+              {{
+              action_link(url_for('admin_sales.sale_detail',sale_id=sale.id),'eye','Ver
+              venta','view') }}
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="5">
+            <div class="ui-empty">
+              <span class="ui-empty__icon"><i class="bi bi-cart3"></i></span
+              ><strong>Sin ventas</strong>Abre una orden técnica, prepara su
+              SOLPED y genera la venta.
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

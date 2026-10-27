@@ -1,0 +1,169 @@
+{% extends 'admin/base.html' %} {% from 'admin/_ui_actions.html' import
+action_post,action_link with context %} {% block title %}Solicitud {{
+record.request_number }}{% endblock %} {% block content %}
+<a class="ui-back-link" href="{{ url_for('admin_sales.sales_requests') }}"
+  ><i class="bi bi-arrow-left"></i> Volver a solicitudes</a
+>
+<header class="ui-page-title mt-2">
+  <div>
+    <div class="ui-eyebrow">SOLPED · Cabecera y detalle</div>
+    <h1>Solicitud SOLPED-{{ '%05d'|format(record.request_number|int) }}</h1>
+    <p>
+      Creada el {{ record.created_at|datetime_pe }} · Cliente: {{ (record.users
+      or {}).full_name or '—' }}
+    </p>
+  </div>
+  <div class="ui-page-actions">
+    <span
+      class="ui-state {{ 'ui-state--active' if record.status == 'APROBADA' else 'ui-state--low' if record.status in ['BORRADOR','PENDIENTE'] else 'ui-state--inactive' }}"
+      >{{ record.status|capitalize }}</span
+    >
+    {% if record.status == 'BORRADOR' %}<a
+      class="btn btn-outline-primary"
+      href="{{ url_for('admin_sales.request_edit',request_id=record.id) }}"
+      ><i class="bi bi-pencil-square"></i> Editar borrador</a
+    >{% endif %}
+  </div>
+</header>
+<div class="row g-4">
+  <div class="col-lg-5">
+    <section class="ui-surface h-100">
+      <div class="ui-surface__head"><h2>Datos de solicitud</h2></div>
+      <div class="ui-surface__body">
+        <dl class="row detail-list mb-0">
+          <dt class="col-sm-5">Cliente</dt>
+          <dd class="col-sm-7">
+            {{ (record.users or {}).full_name or '—' }}
+            <div class="ui-subline">{{ (record.users or {}).email or '' }}</div>
+          </dd>
+          <dt class="col-sm-5">Orden técnica</dt>
+          <dd class="col-sm-7">
+            {% if record.service_orders %}<a
+              href="{{ url_for('admin.order_detail',order_id=record.service_order_id) }}"
+              >Orden #{{ record.service_orders.order_number }}
+              <i class="bi bi-box-arrow-up-right"></i></a
+            >{% else %}Sin asociación{% endif %}
+          </dd>
+          <dt class="col-sm-5">Estado</dt>
+          <dd class="col-sm-7">{{ record.status }}</dd>
+          <dd class="col-sm-7 text-break">{{ record.notes or '—' }}</dd>
+        </dl>
+      </div>
+    </section>
+  </div>
+  <div class="col-lg-7">
+    <section class="ui-surface h-100">
+      <div class="ui-surface__head">
+        <h2>Detalle comercial</h2>
+        <p>{{ record.details|length }} concepto(s)</p>
+      </div>
+      <div class="table-responsive">
+        <table class="table ui-table ui-commercial-table">
+          <colgroup>
+            <col style="width: 40%" />
+            <col style="width: 15%" />
+            <col style="width: 22%" />
+            <col style="width: 23%" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Concepto</th>
+              <th class="text-center">Cant.</th>
+              <th class="text-end">P. unitario</th>
+              <th class="text-end">Importe</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for line in record.details %}
+            <tr>
+              <td>
+                <strong>{{ line.description }}</strong>
+                <div class="ui-subline">
+                  {{ 'Servicio' if line.item_kind == 'SERVICIO' else 'Producto'
+                  }}
+                </div>
+              </td>
+              <td class="text-center">{{ line.quantity }}</td>
+              <td class="text-end">
+                S/ {{ line.unit_price|commercial_money }}
+              </td>
+              <td class="text-end">
+                S/ {{ line.line_total|commercial_money }}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <th colspan="3" class="text-end">Subtotal</th>
+              <th class="text-end">S/ {{ subtotal|commercial_money }}</th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
+<section class="ui-surface mt-4">
+  <div class="ui-surface__head"><h2>Acciones de la solicitud</h2></div>
+  <div class="ui-surface__body d-flex gap-2 flex-wrap align-items-center">
+    {% if linked_sale %}
+    <a
+      class="btn btn-primary"
+      href="{{ url_for('admin_sales.sale_detail',sale_id=linked_sale.id) }}"
+      ><i class="bi bi-cart-check me-1"></i> Ver venta VTA-{{
+      '%05d'|format(linked_sale.sale_number|int) }}</a
+    >
+    {% elif record.status in ['BORRADOR', 'PENDIENTE', 'APROBADA'] %}
+    <form
+      method="post"
+      action="{{ url_for('admin_sales.sale_convert',request_id=record.id) }}"
+      onsubmit="
+        return confirm(
+          '¿Los conceptos y precios están correctos? Se generará una venta confirmada.',
+        );
+      "
+    >
+      <input
+        type="hidden"
+        name="csrf_token"
+        value="{{ session.admin_csrf_token }}"
+      />
+      <button class="btn btn-primary" type="submit">
+        <i class="bi bi-cart-check me-1"></i> Generar venta
+      </button>
+    </form>
+    {% if record.status == 'BORRADOR' %}
+    <form
+      method="post"
+      action="{{ url_for('admin_sales.request_action',request_id=record.id,action='eliminar') }}"
+      onsubmit="return confirm('¿Eliminar este borrador?');"
+    >
+      <input
+        type="hidden"
+        name="csrf_token"
+        value="{{ session.admin_csrf_token }}"
+      /><button class="btn btn-outline-danger" type="submit">
+        <i class="bi bi-trash3"></i> Eliminar borrador
+      </button>
+    </form>
+    {% endif %} {% if record.status in ['BORRADOR','PENDIENTE'] %}
+    <form
+      method="post"
+      action="{{ url_for('admin_sales.request_action',request_id=record.id,action='cancelar') }}"
+      onsubmit="return confirm('¿Cancelar la SOLPED?');"
+    >
+      <input
+        type="hidden"
+        name="csrf_token"
+        value="{{ session.admin_csrf_token }}"
+      /><button class="btn btn-outline-secondary" type="submit">
+        <i class="bi bi-slash-circle"></i> Cancelar SOLPED
+      </button>
+    </form>
+    {% endif %} {% else %}<span class="text-muted"
+      >Esta solicitud no admite nuevas acciones comerciales.</span
+    >{% endif %}
+  </div>
+</section>
+{% endblock %}

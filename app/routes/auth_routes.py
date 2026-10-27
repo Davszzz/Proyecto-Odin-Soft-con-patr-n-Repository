@@ -99,23 +99,22 @@ def login():
 
     if request.method == "POST":
 
-        email = request.form.get(
-            "email",
-            ""
-        )
+        email = request.form.get("email", "")
+        password = request.form.get("password", "")
 
-        password = request.form.get(
-            "password",
-            ""
-        )
-
-        user = auth_service.login(
+        result = auth_service.login(
             email,
             password
         )
 
-        if not user:
+        if result["status"] == "temporarily_locked":
+            return render_template(
+                "login.html",
+                locked=True,
+                remaining_seconds=result["remaining_seconds"]
+            )
 
+        if result["status"] == "invalid":
             flash(
                 "Correo o contraseña incorrectos.",
                 "danger"
@@ -124,6 +123,8 @@ def login():
             return render_template(
                 "login.html"
             )
+
+        user = result["user"]
 
         session["user_id"] = user["id"]
         session["user_name"] = user["full_name"]
@@ -141,7 +142,6 @@ def login():
     return render_template(
         "login.html"
     )
-
 
 @auth_bp.route("/logout")
 def logout():

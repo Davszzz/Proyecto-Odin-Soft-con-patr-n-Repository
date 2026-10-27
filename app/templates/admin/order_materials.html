@@ -1,0 +1,327 @@
+{% extends 'admin/base.html' %}
+{% from 'admin/_ui_actions.html' import action_post with context %}
+
+{% block title %}
+Materiales de la orden #{{ order.order_number }}
+{% endblock %}
+
+{% block content %}
+
+<!-- ENCABEZADO -->
+
+<header class="ui-page-title">
+    <div>
+        <a class="ui-back-link" href="{{ url_for('admin.order_detail', order_id=order.id) }}">
+            <i class="bi bi-arrow-left"></i>
+            Volver al detalle de la orden
+        </a>
+
+        <div class="ui-eyebrow">
+            Consumo de inventario
+        </div>
+
+        <h1>
+            Materiales · Orden #{{ order.order_number }}
+        </h1>
+
+        <p>
+            Repuestos e insumos utilizados durante la atención técnica.
+        </p>
+    </div>
+
+    <div class="ui-page-actions">
+        <span class="status-pill status-{{ (order.order_statuses or {}).code or 'REGISTERED' }}">
+            {{ (order.order_statuses or {}).name or 'Sin estado' }}
+        </span>
+    </div>
+</header>
+
+
+<div class="row g-4">
+
+    <!-- REGISTRAR CONSUMO -->
+
+    <div class="col-xl-5">
+
+        <section class="ui-surface h-100">
+
+            <div class="ui-surface__head">
+                <div>
+                    <h2>
+                        <i class="bi bi-plus-circle text-primary me-2"></i>
+                        Registrar consumo
+                    </h2>
+
+                    <p>
+                        Selecciona material y cantidad utilizada.
+                    </p>
+                </div>
+            </div>
+
+            <div class="ui-surface__body">
+
+                {% if can_modify %}
+
+                <form method="post" action="{{ url_for('admin_material.add_material', order_id=order.id) }}">
+
+                    <input type="hidden" name="csrf_token" value="{{ session.get('admin_csrf_token', '') }}">
+
+                    <!-- SELECCIONAR MATERIAL -->
+
+                    <div class="mb-3">
+
+                        <label class="form-label" for="item_id">
+                            Producto o insumo
+                        </label>
+
+                        <select class="form-select" name="item_id" id="item_id" required>
+
+                            <option value="">
+                                Seleccionar producto...
+                            </option>
+
+                            {% for item in items %}
+
+                            <option value="{{ item.id }}" {% if (item.stock_quantity | int) <=0 %} disabled {% endif %}>
+                                {{ item.name }}
+
+                                {% if item.sku %}
+                                ({{ item.sku }})
+                                {% endif %}
+
+                                — Stock: {{ item.stock_quantity }}
+                            </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                        <div class="form-text">
+                            Los materiales sin stock no pueden seleccionarse.
+                        </div>
+
+                    </div>
+
+
+                    <!-- CANTIDAD -->
+
+                    <div class="mb-3">
+
+                        <label class="form-label" for="quantity">
+                            Cantidad utilizada
+                        </label>
+
+                        <input id="quantity" type="number" name="quantity" class="form-control" min="1" max="10000"
+                            step="1" value="1" required>
+
+                        <div class="form-text">
+                            Si ya existe una asignación, se sumará
+                            la cantidad adicional.
+                        </div>
+
+                    </div>
+
+
+                    <!-- BOTÓN REGISTRAR -->
+
+                    <div class="ui-form-actions">
+
+                        <button class="btn btn-primary" type="submit">
+                            <i class="bi bi-plus-lg"></i>
+                            Registrar consumo
+                        </button>
+
+                    </div>
+
+                </form>
+
+                {% else %}
+
+                <!-- ORDEN BLOQUEADA -->
+
+                <div class="ui-alert">
+
+                    <i class="bi bi-lock"></i>
+
+                    <span>
+                        La orden está finalizada o cancelada.
+                        Sus materiales se conservan como
+                        registro histórico.
+                    </span>
+
+                </div>
+
+                {% endif %}
+
+            </div>
+
+        </section>
+
+    </div>
+
+
+    <!-- MATERIALES REGISTRADOS -->
+
+    <div class="col-xl-7">
+
+        <section class="ui-surface h-100">
+
+            <div class="ui-surface__head">
+
+                <div>
+                    <h2>
+                        Materiales registrados
+                    </h2>
+
+                    <p>
+                        Detalle del consumo de esta orden
+                    </p>
+                </div>
+
+                <span class="ui-cost-pill">
+                    Costo de materiales: S/ {{ '%.2f'|format(total_cost|float) }}
+                </span>
+
+            </div>
+
+
+            <!-- TABLA -->
+
+            <div class="table-responsive">
+
+                <table class="table table-hover ui-table">
+
+                    <thead>
+                        <tr>
+                            <th>Material</th>
+                            <th>Cantidad</th>
+                            <th>Costo unit.</th>
+                            <th>Subtotal</th>
+                            <th class="text-end">
+                                Acción
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for row in materials %}
+
+                        {% set item = row.inventory_items or {} %}
+
+                        <tr>
+
+                            <!-- MATERIAL -->
+
+                            <td>
+
+                                <div class="ui-title-cell">
+                                    {{ item.name or 'Producto' }}
+                                </div>
+
+                                <div class="ui-subline">
+                                    {{ item.sku or 'Sin SKU' }}
+                                </div>
+
+                            </td>
+
+
+                            <!-- CANTIDAD -->
+
+                            <td>
+                                {{ row.quantity }}
+                            </td>
+
+
+                            <!-- COSTO UNITARIO -->
+
+                            <td>
+                                S/ {{ '%.2f'|format(row.unit_cost|float) }}
+                            </td>
+
+
+                            <!-- SUBTOTAL -->
+
+                            <td class="fw-semibold">
+                                S/ {{ '%.2f'|format(
+                                (row.unit_cost|float) * (row.quantity|int)
+                                ) }}
+                            </td>
+
+
+                            <!-- ACCIONES -->
+
+                            <td class="text-end">
+
+                                {% if can_modify %}
+
+                                <div class="ui-action-group">
+
+                                    {{ action_post(
+                                    url_for(
+                                    'admin_material.remove_material',
+                                    order_id=order.id,
+                                    item_id=item.id
+                                    ),
+                                    'arrow-counterclockwise',
+                                    'Revertir consumo y devolver stock',
+                                    'undo',
+                                    '¿Revertir esta asignación y devolver sus unidades al inventario?'
+                                    ) }}
+
+                                </div>
+
+                                {% else %}
+
+                                <span class="text-muted">
+                                    —
+                                </span>
+
+                                {% endif %}
+
+                            </td>
+
+                        </tr>
+
+                        {% else %}
+
+                        <!-- SIN MATERIALES -->
+
+                        <tr>
+                            <td colspan="5">
+
+                                <div class="ui-empty">
+
+                                    <span class="ui-empty__icon">
+                                        <i class="bi bi-box-seam"></i>
+                                    </span>
+
+                                    <strong>
+                                        Sin materiales
+                                    </strong>
+
+                                    <p>
+                                        Aún no se ha registrado ningún
+                                        consumo en esta orden.
+                                    </p>
+
+                                </div>
+
+                            </td>
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends 'admin/base.html' %} {% block title %}Comprobante {{ doc.series }}-{{
+doc.document_number }}{% endblock %} {% block content %}
+<a class="ui-back-link" href="{{ url_for('admin_sales.documents') }}"><i class="bi bi-arrow-left"></i> Volver a
+  comprobantes</a>
+<header class="ui-page-title mt-2">
+  <div>
+    <div class="ui-eyebrow">
+      {{ doc.document_type|capitalize }}
+    </div>
+    <h1>{{ doc.series }}-{{ doc.document_number }}</h1>
+    <p>Documento interno vinculado a una venta.</p>
+  </div>
+  <div class="ui-page-actions">
+    <span
+      class="ui-state {{ 'ui-state--active' if doc.status == 'EMITIDO' else 'ui-state--inactive' if doc.status == 'ANULADO' else 'ui-state--low' }}">{{
+      doc.status|capitalize }}</span>{% if doc.status == 'BORRADOR' %}<a class="btn btn-outline-primary"
+      href="{{ url_for('admin_sales.document_edit',document_id=doc.id) }}"><i class="bi bi-pencil-square"></i> Editar
+      borrador</a>{% endif %}
+  </div>
+</header>
+<div class="row g-4">
+  <div class="col-lg-5">
+    <section class="ui-surface h-100">
+      <div class="ui-surface__head">
+        <h2>Cabecera del comprobante</h2>
+      </div>
+      <div class="ui-surface__body">
+        <dl class="row detail-list mb-0">
+          <dt class="col-sm-5">Comprador</dt>
+          <dd class="col-sm-7">{{ doc.buyer_name }}</dd>
+          <dt class="col-sm-5">RUC / Documento</dt>
+          <dd class="col-sm-7">{{ doc.buyer_tax_id or '—' }}</dd>
+          <dt class="col-sm-5">Dirección</dt>
+          <dd class="col-sm-7 text-break">{{ doc.buyer_address or '—' }}</dd>
+          <dt class="col-sm-5">Fecha</dt>
+          <dd class="col-sm-7">{{ doc.created_at|datetime_pe }}</dd>
+          <dt class="col-sm-5">Estado</dt>
+          <dd class="col-sm-7">{{ doc.status }}</dd>
+        </dl>
+      </div>
+    </section>
+  </div>
+  <div class="col-lg-7">
+    <section class="ui-surface h-100">
+      <div class="ui-surface__head">
+        <h2>Detalle del comprobante</h2>
+      </div>
+      <div class="table-responsive">
+        <table class="table ui-table ui-commercial-table">
+          <colgroup>
+            <col style="width: 40%">
+            <col style="width: 15%">
+            <col style="width: 22%">
+            <col style="width: 23%">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Concepto</th>
+              <th class="text-center">Cantidad</th>
+              <th class="text-end">P. unitario</th>
+              <th class="text-end">Importe</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for line in doc.details %}
+            <tr>
+              <td>{{ line.description }}</td>
+              <td class="text-center">{{ line.quantity }}</td>
+              <td class="text-end">
+                S/ {{ line.unit_price|commercial_money }}
+              </td>
+              <td class="text-end">
+                S/ {{ line.line_total|commercial_money }}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3" class="text-end">Subtotal</td>
+              <td class="text-end">S/ {{ doc.subtotal|commercial_money }}</td>
+            </tr>
+            <tr>
+              <td colspan="3" class="text-end">
+                Impuesto ({{ (doc.tax_rate|float * 100)|round(2) }} %)
+              </td>
+              <td class="text-end">S/ {{ doc.tax_amount|commercial_money }}</td>
+            </tr>
+            <tr>
+              <th colspan="3" class="text-end">Total</th>
+              <th class="text-end">S/ {{ doc.total|commercial_money }}</th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
+<section class="ui-surface mt-4">
+  <div class="ui-surface__head">
+    <h2>Acciones del comprobante</h2>
+  </div>
+  <div class="ui-surface__body d-flex gap-2 flex-wrap align-items-center">
+    {% if doc.status == 'BORRADOR' %}
+    <form method="post" action="{{ url_for('admin_sales.document_action',document_id=doc.id,action='emitir') }}"
+      onsubmit="
+        return confirm(
+          'Esta operación es una emisión académica simulada. ¿Continuar?',
+        );
+      ">
+      <input type="hidden" name="csrf_token" value="{{ session.admin_csrf_token }}" /><button class="btn btn-primary"
+        type="submit">
+        <i class="bi bi-check2-circle"></i> Marcar emitido 
+      </button>
+    </form>
+    <form method="post" action="{{ url_for('admin_sales.document_action',document_id=doc.id,action='eliminar') }}"
+      onsubmit="return confirm('¿Eliminar este comprobante en borrador?');">
+      <input type="hidden" name="csrf_token" value="{{ session.admin_csrf_token }}" /><button
+        class="btn btn-outline-danger" type="submit">
+        <i class="bi bi-trash3"></i> Eliminar borrador
+      </button>
+    </form>
+    {% elif doc.status == 'EMITIDO' %}
+    <form method="post" action="{{ url_for('admin_sales.document_action',document_id=doc.id,action='anular') }}"
+      onsubmit="return confirm('¿Anular este comprobante interno?');">
+      <input type="hidden" name="csrf_token" value="{{ session.admin_csrf_token }}" /><button
+        class="btn btn-outline-danger" type="submit">
+        <i class="bi bi-slash-circle"></i> Anular
+      </button>
+    </form>
+    {% else %}<span class="text-muted">Documento anulado. Se conserva su historial.</span>{% endif %}
+    <a href="{{ url_for('admin_sales.sale_detail',sale_id=doc.sale_id) }}" class="btn btn-outline-secondary"><i
+        class="bi bi-cart-check"></i> Ver venta</a>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends 'admin/base.html' %} {% from 'admin/_ui_actions.html' import
+action_link with context %} {% block title %}Solicitudes de pedido{% endblock %}
+{% block content %}
+<header class="ui-page-title">
+  <div>
+    <div class="ui-eyebrow">Proceso comercial</div>
+    <h1>Solicitudes de pedido</h1>
+    <p>
+      Las SOLPED se generan desde las órdenes técnicas para no registrar dos
+      veces los datos.
+    </p>
+  </div>
+  <div class="ui-page-actions">
+    <a href="{{ url_for('admin.orders') }}" class="btn btn-primary"
+      ><i class="bi bi-clipboard-check me-1"></i> Ir a órdenes para generar
+      SOLPED</a
+    >
+  </div>
+</header>
+<section class="ui-surface">
+  <div class="ui-surface__head">
+    <div>
+      <h2>Solicitudes</h2>
+      <p>{{ records|length }} registros</p>
+    </div>
+    <label class="ui-search"
+      ><i class="bi bi-search"></i
+      ><span class="visually-hidden">Buscar solicitudes</span
+      ><input
+        class="form-control"
+        type="search"
+        placeholder="Número, cliente o estado"
+        data-ui-search="salesRequestTable"
+    /></label>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover ui-table" id="salesRequestTable">
+      <thead>
+        <tr>
+          <th>Solicitud</th>
+          <th>Cliente</th>
+          <th>Orden técnica</th>
+          <th>Estado</th>
+          <th>Fecha</th>
+          <th class="text-end">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in records %}
+        <tr>
+          <td class="ui-title-cell">
+            SOLPED-{{ '%05d'|format(item.request_number|int) }}
+          </td>
+          <td>
+            <strong>{{ (item.users or {}).full_name or '—' }}</strong>
+            <div class="ui-subline">{{ (item.users or {}).email or '' }}</div>
+          </td>
+          <td>
+            {{ '#' ~ item.service_orders.order_number if item.service_orders
+            else 'Sin asociación' }}
+          </td>
+          <td>
+            <span
+              class="ui-state {{ 'ui-state--active' if item.status == 'APROBADA' else 'ui-state--low' if item.status in ['PENDIENTE','BORRADOR'] else 'ui-state--inactive' }}"
+              >{{ item.status|capitalize }}</span
+            >
+          </td>
+          <td>{{ item.created_at|date_pe }}</td>
+          <td class="text-end">
+            <div class="ui-action-group">
+              {{
+              action_link(url_for('admin_sales.request_detail',request_id=item.id),'eye','Ver
+              solicitud','view') }}{% if item.status == 'BORRADOR' %}{{
+              action_link(url_for('admin_sales.request_edit',request_id=item.id),'pencil-square','Editar
+              borrador','edit') }}{% endif %}
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6">
+            <div class="ui-empty">
+              <span class="ui-empty__icon"
+                ><i class="bi bi-file-earmark-text"></i></span
+              ><strong>Sin solicitudes</strong>Registra la primera solicitud de
+              pedido.
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

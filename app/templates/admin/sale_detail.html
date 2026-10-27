@@ -1,0 +1,130 @@
+{% extends 'admin/base.html' %} {% block title %}Venta {{ sale.sale_number }}{%
+endblock %} {% block content %}
+<a class="ui-back-link" href="{{ url_for('admin_sales.sales') }}"><i class="bi bi-arrow-left"></i> Volver a ventas</a>
+<header class="ui-page-title mt-2">
+  <div>
+    <div class="ui-eyebrow">Venta · Cabecera y detalle</div>
+    <h1>Venta VTA-{{ '%05d'|format(sale.sale_number|int) }}</h1>
+    <p>
+      Generada el {{ sale.created_at|datetime_pe }} desde la solicitud {{
+      (sale.sales_requests or {}).request_number or '—' }}
+    </p>
+  </div>
+  <span
+    class="ui-state {{ 'ui-state--active' if sale.status == 'CONFIRMADA' else 'ui-state--low' if sale.status == 'REGISTRADA' else 'ui-state--inactive' }}">{{
+    sale.status|capitalize }}</span>
+</header>
+<div class="row g-4">
+  <div class="col-lg-5">
+    <section class="ui-surface h-100">
+      <div class="ui-surface__head">
+        <h2>Datos de venta</h2>
+      </div>
+      <div class="ui-surface__body">
+        <dl class="row detail-list">
+          <dt class="col-sm-5">Solicitud</dt>
+          <dd class="col-sm-7">
+            SOLPED-{{ '%05d'|format(sale.sales_requests.request_number|int) if
+            sale.sales_requests else '—' }}
+          </dd>
+          <dt class="col-sm-5">Estado</dt>
+          <dd class="col-sm-7">{{ sale.status }}</dd>
+          <dt class="col-sm-5">Creada</dt>
+          <dd class="col-sm-7">{{ sale.created_at|datetime_pe }}</dd>
+        </dl>
+        {% if sale.status == 'REGISTRADA' %}
+        <form method="post" action="{{ url_for('admin_sales.sale_notes',sale_id=sale.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ session.admin_csrf_token }}" /><label class="form-label"
+            for="notes">Observaciones</label><textarea class="form-control" name="notes" id="notes" maxlength="3000"
+            rows="3">
+{{ sale.notes or '' }}</textarea><button class="btn btn-outline-primary btn-sm mt-2" type="submit">
+            <i class="bi bi-check2"></i> Guardar observaciones
+          </button>
+        </form>
+        {% else %}
+        {% endif %}
+      </div>
+    </section>
+  </div>
+  <div class="col-lg-7">
+    <section class="ui-surface h-100">
+      <div class="ui-surface__head">
+        <h2>Detalle de venta</h2>
+      </div>
+      <div class="table-responsive">
+        <table class="table ui-table ui-commercial-table">
+          <colgroup>
+            <col style="width: 40%" />
+            <col style="width: 15%" />
+            <col style="width: 22%" />
+            <col style="width: 23%" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Concepto</th>
+              <th class="text-center">Cantidad</th>
+              <th class="text-end">Precio</th>
+              <th class="text-end">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for line in sale.details %}
+            <tr>
+              <td>{{ line.description }}</td>
+              <td class="text-center">{{ line.quantity }}</td>
+              <td class="text-end">
+                S/ {{ line.unit_price|commercial_money }}
+              </td>
+              <td class="text-end">
+                S/ {{ line.line_total|commercial_money }}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <th colspan="3" class="text-end">Subtotal de venta</th>
+              <th class="text-end">S/ {{ subtotal|commercial_money }}</th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
+<section class="ui-surface mt-4">
+  <div class="ui-surface__head">
+    <h2>Acciones de venta</h2>
+  </div>
+  <div class="ui-surface__body d-flex gap-2 flex-wrap align-items-center">
+    {% if sale.status == 'REGISTRADA' %}
+    <form method="post" action="{{ url_for('admin_sales.sale_action',sale_id=sale.id,action='confirmar') }}">
+      <input type="hidden" name="csrf_token" value="{{ session.admin_csrf_token }}" /><button type="submit"
+        class="btn btn-primary">
+        <i class="bi bi-check2-circle"></i> Confirmar venta
+      </button>
+    </form>
+    <form method="post" action="{{ url_for('admin_sales.sale_action',sale_id=sale.id,action='cancelar') }}"
+      onsubmit="return confirm('¿Cancelar esta venta?');">
+      <input type="hidden" name="csrf_token" value="{{ session.admin_csrf_token }}" /><button type="submit"
+        class="btn btn-outline-danger">
+        <i class="bi bi-slash-circle"></i> Cancelar venta
+      </button>
+    </form>
+    <form method="post" action="{{ url_for('admin_sales.sale_action',sale_id=sale.id,action='eliminar') }}" onsubmit="
+        return confirm('¿Eliminar definitivamente esta venta NO confirmada?');
+      ">
+      <input type="hidden" name="csrf_token" value="{{ session.admin_csrf_token }}" /><button
+        class="btn btn-outline-danger" type="submit">
+        <i class="bi bi-trash3"></i> Eliminar venta
+      </button>
+    </form>
+    {% elif sale.status == 'CONFIRMADA' %} {% if document %}<a
+      href="{{ url_for('admin_sales.document_detail',document_id=document.id) }}" class="btn btn-outline-primary"><i
+        class="bi bi-receipt"></i> Ver comprobante</a>
+    {% else %}<a href="{{ url_for('admin_sales.document_new',sale_id=sale.id) }}" class="btn btn-primary"><i
+        class="bi bi-receipt"></i> Crear boleta / factura</a>{% endif %} {% else %}<span class="text-muted">Venta
+      cancelada. No admite nuevos cambios.</span>{% endif %}
+  </div>
+</section>
+{% endblock %}

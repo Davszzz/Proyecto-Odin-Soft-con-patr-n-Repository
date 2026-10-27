@@ -1,0 +1,299 @@
+
+{% extends 'admin/base.html' %}
+
+{% block title %}
+{{ 'Editar' if editing else 'Nuevo' }} comprobante
+{% endblock %}
+
+{% block content %}
+
+<a
+    class="ui-back-link"
+    href="{{ url_for('admin_sales.sale_detail', sale_id=sale.id) }}"
+>
+    <i class="bi bi-arrow-left"></i>
+    Volver a venta
+</a>
+
+<header class="ui-page-title mt-2">
+    <div>
+        <div class="ui-eyebrow">
+            Comprobantes
+        </div>
+
+        <h1>
+            {{ 'Editar comprobante' if editing else 'Nuevo comprobante' }}
+        </h1>
+
+        <p>
+            Los conceptos se copian
+            automáticamente desde la venta confirmada.
+        </p>
+    </div>
+</header>
+
+{% set selected_type = fields.get('document_type') or 'BOLETA' %}
+{% set initial_series = fields.get('series') or ('F001' if selected_type == 'FACTURA' else 'B001') %}
+
+<form
+    method="post"
+    id="saleDocumentForm"
+    data-editing="{{ '1' if editing else '0' }}"
+>
+    <input
+        type="hidden"
+        name="csrf_token"
+        value="{{ session.admin_csrf_token }}"
+    >
+
+    <section class="ui-surface">
+
+        <div class="ui-surface__head">
+            <h2>Datos del comprobante</h2>
+        </div>
+
+        <div class="ui-surface__body">
+
+            <div class="row g-3">
+
+                <!-- TIPO DE COMPROBANTE -->
+
+                <div class="col-md-4">
+
+                    <label class="form-label" for="document_type">
+                        Tipo de comprobante *
+                    </label>
+
+                    <select
+                        name="document_type"
+                        id="document_type"
+                        class="form-select"
+                        required
+                    >
+                        <option
+                            value="BOLETA"
+                            {% if selected_type == 'BOLETA' %}selected{% endif %}
+                        >
+                            Boleta
+                        </option>
+
+                        <option
+                            value="FACTURA"
+                            {% if selected_type == 'FACTURA' %}selected{% endif %}
+                        >
+                            Factura
+                        </option>
+                    </select>
+
+                </div>
+
+
+                <!-- SERIE -->
+
+                <div class="col-md-4">
+
+                    <label class="form-label" for="series">
+                        Serie *
+                    </label>
+
+                    <input
+                        name="series"
+                        id="series"
+                        maxlength="12"
+                        class="form-control"
+                        value="{{ initial_series }}"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- NÚMERO -->
+
+                <div class="col-md-4">
+
+                    <label class="form-label" for="document_number">
+                        Número *
+                    </label>
+
+                    <input
+                        name="document_number"
+                        id="document_number"
+                        maxlength="20"
+                        class="form-control"
+                        value="{{ fields.get('document_number') or '' }}"
+                        placeholder="000001"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- COMPRADOR -->
+
+                <div class="col-md-8">
+
+                    <label class="form-label" for="buyer_name">
+                        Nombre o razón social *
+                    </label>
+
+                    <input
+                        class="form-control"
+                        name="buyer_name"
+                        id="buyer_name"
+                        maxlength="180"
+                        value="{{ fields.get('buyer_name') or '' }}"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- RUC -->
+
+                <div class="col-md-4">
+
+                    <label class="form-label" for="buyer_tax_id">
+                        RUC (obligatorio en factura)
+                    </label>
+
+                    <input
+                        class="form-control"
+                        name="buyer_tax_id"
+                        id="buyer_tax_id"
+                        maxlength="20"
+                        value="{{ fields.get('buyer_tax_id') or '' }}"
+                        placeholder="11 dígitos"
+                    >
+
+                </div>
+
+
+                <!-- DIRECCIÓN -->
+
+                <div class="col-12">
+
+                    <label class="form-label" for="buyer_address">
+                        Dirección del comprador
+                    </label>
+
+                    <input
+                        class="form-control"
+                        name="buyer_address"
+                        id="buyer_address"
+                        value="{{ fields.get('buyer_address') or '' }}"
+                    >
+
+                </div>
+
+
+                <!-- IMPUESTO -->
+
+                <div class="col-md-4">
+
+                    <label class="form-label" for="tax_rate">
+                        Tasa de impuesto*
+                    </label>
+
+                    <input
+                        class="form-control"
+                        type="number"
+                        name="tax_rate"
+                        id="tax_rate"
+                        min="0"
+                        max="1"
+                        step="0.0001"
+                        value="{{ fields.get('tax_rate', '0.18') }}"
+                        required
+                    >
+
+                    <div class="form-text">
+                        Ejemplo: 0.18 = 18 %.
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ACCIONES -->
+
+            <div class="ui-form-actions">
+
+                <a
+                    class="btn btn-outline-secondary"
+                    href="{{ url_for('admin_sales.sale_detail', sale_id=sale.id) }}"
+                >
+                    Cancelar
+                </a>
+
+                <button
+                    class="btn btn-primary"
+                    type="submit"
+                >
+                    <i class="bi bi-check2"></i>
+
+                    {{ 'Guardar cambios' if editing else 'Crear borrador' }}
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</form>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const form = document.getElementById("saleDocumentForm");
+
+    const documentType = document.getElementById("document_type");
+    const series = document.getElementById("series");
+    const ruc = document.getElementById("buyer_tax_id");
+
+    const editing = form.dataset.editing === "1";
+
+    function updateDocumentType() {
+
+        const isInvoice = documentType.value === "FACTURA";
+
+        // El RUC es obligatorio para las facturas.
+        ruc.required = isInvoice;
+
+        ruc.setAttribute(
+            "aria-required",
+            String(isInvoice)
+        );
+
+    }
+
+    documentType.addEventListener("change", function () {
+
+        // Cambiar automáticamente la serie solamente
+        // cuando se crea un comprobante nuevo.
+        if (!editing) {
+
+            series.value = documentType.value === "FACTURA"
+                ? "F001"
+                : "B001";
+
+        }
+
+        updateDocumentType();
+
+    });
+
+    // Aplicar las validaciones al abrir el formulario.
+    updateDocumentType();
+
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,284 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}{{ 'Editar SOLPED' if editing else 'SOLPED desde orden' if origin_order else 'Nueva SOLPED' }}{%
+endblock %}
+
+{% block content %}
+
+<a class="ui-back-link" href="{{ url_for('admin_sales.sales_requests') }}"><i class="bi bi-arrow-left"></i> Volver a
+  solicitudes</a>
+
+<header class="ui-page-title mt-2">
+  <div>
+    <div class="ui-eyebrow">SOLPED · Cabecera y detalle</div>
+    <h1>{{ 'Editar solicitud' if editing else 'SOLPED desde orden #' ~ origin_order.order_number if origin_order else
+      'Nueva solicitud de pedido' }}</h1>
+  </div>
+</header>
+
+{% if origin_order %}
+
+<div class="ui-alert mb-3"><i class="bi bi-link-45deg"></i><span>Solicitud vinculada a la <a
+      href="{{ url_for('admin.order_detail',order_id=origin_order.id) }}"><strong>orden técnica #{{
+        origin_order.order_number }}</strong></a>. {% if editing %}Los conceptos y cantidades permanecen vinculados a la
+    orden; puedes corregir los precios mientras la SOLPED esté en borrador.{% else %}Se recuperaron el servicio y los
+    repuestos utilizados. Los insumos usados en la elaboración del servicio no se cobran. {% endif %} </div>
+
+{% for warning in origin_warnings %}<div class="alert alert-warning" role="alert">{{ warning }}</div>{% endfor %}
+
+{% endif %}
+
+<form method="post" id="commercialRequestForm">
+
+  <input type="hidden" name="csrf_token" value="{{ session.get('admin_csrf_token','') }}">
+
+  <section class="ui-surface mb-4">
+
+    <div class="ui-surface__head">
+      <h2>Datos de la solicitud (cabecera)</h2>
+    </div>
+
+    <div class="ui-surface__body">
+      <div class="row g-3">
+
+        {% if origin_order %}
+
+        <div class="col-md-6"><label class="form-label">Cliente de la orden</label>
+          <div class="form-control bg-light">{{ origin_client.full_name }} · {{ origin_client.email }}</div><input
+            type="hidden" name="user_id" value="{{ origin_order.user_id }}">
+        </div>
+
+        <div class="col-md-6"><label class="form-label">Orden técnica</label>
+          <div class="form-control bg-light">Orden #{{ origin_order.order_number }}</div><input type="hidden"
+            name="service_order_id" value="{{ origin_order.id }}">
+        </div>
+
+        {% else %}
+
+        <div class="col-md-6"><label class="form-label" for="client_id">Cliente *</label>
+
+          <select name="user_id" id="client_id" class="form-select" required>
+            <option value="">Selecciona un cliente</option>
+
+            {% for client in choices.clients %}<option value="{{ client.id }}" {% if
+              fields.get('user_id')|string==client.id|string %}selected{% endif %}>{{ client.full_name }} · {{
+              client.email }}</option>{% endfor %}
+
+          </select>
+        </div>
+
+        <div class="col-md-6"><label class="form-label" for="service_order_id">Orden técnica relacionada
+            (opcional)</label>
+
+          <select name="service_order_id" id="service_order_id" class="form-select">
+            <option value="">Sin orden relacionada</option>
+
+            {% for order in choices.orders %}<option value="{{ order.id }}" data-client-id="{{ order.user_id }}" {% if
+              fields.get('service_order_id')|string==order.id|string %}selected{% endif %}>Orden #{{ order.order_number
+              }}</option>{% endfor %}
+          </select>
+
+          <div class="form-text">Solo se muestran órdenes del cliente seleccionado.</div>
+
+        </div>
+
+        {% endif %}
+
+        <div class="col-12"><label for="notes" class="form-label">Observaciones</label><textarea name="notes" id="notes"
+            class="form-control" rows="2" maxlength="3000">{{ fields.get('notes') or '' }}</textarea></div>
+
+      </div>
+    </div>
+
+  </section>
+
+  <section class="ui-surface mb-4">
+
+    <div class="ui-surface__head">
+      <div>
+        <h2>Detalle del servicio</h2>
+        <p>Servicios técnicos o repuestos y productos con sus cantidades y precios</p>
+      </div>
+
+      {% if not origin_order %}<button class="btn btn-outline-primary btn-sm" type="button" id="addCommercialLine"><i
+          class="bi bi-plus-lg"></i> Agregar concepto</button>{% endif %}
+
+    </div>
+
+    <div class="ui-surface__body">
+
+      {% if origin_order %}
+
+      <div id="commercialLines" class="d-grid gap-3">
+
+        {% for line in lines %}
+
+        <div class="border rounded-3 p-3 commercial-line">
+
+          <div class="d-flex justify-content-between align-items-center mb-3">
+
+            <strong class="text-secondary">Concepto {{ loop.index }}</strong>
+
+            <span class="badge text-bg-light">{{ 'Servicio técnico' if line.item_kind == 'SERVICIO' else 'Repuesto /
+              producto' }}</span>
+
+          </div>
+
+          <input type="hidden" name="line_kind[]" value="{{ line.item_kind }}">
+
+          <input type="hidden" name="line_reference[]" value="{{ line.reference or '' }}">
+
+          <input type="hidden" name="line_description[]" value="{{ line.description or '' }}">
+
+          <div class="row g-3 align-items-end">
+
+            <div class="col-lg-6">
+
+              <label class="form-label">Concepto de la orden</label>
+
+              <div class="form-control bg-light text-break" aria-readonly="true">{{ line.description or 'Concepto
+                registrado en la orden' }}</div>
+
+            </div>
+
+            <div class="col-sm-3">
+
+              <label class="form-label">Cantidad utilizada</label>
+
+              <input class="form-control bg-light" name="line_quantity[]" type="number" step="0.01"
+                value="{{ line.quantity }}" readonly>
+
+            </div>
+
+            <div class="col-sm-3">
+
+              <label class="form-label">Precio de venta unitario (S/) *</label>
+
+              <input class="form-control" name="line_price[]" type="number" min="0" max="9999999999.99" step="0.01"
+                value="{{ line.unit_price if line.unit_price is not none else '' }}"
+                placeholder="{{ 'Tarifa no configurada' if not editing and not line.get('catalog_price_configured') else 'Ingresa el precio' }}"
+                required>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {% endfor %}
+
+      </div>
+
+      {% else %}
+
+      <div id="commercialLines" class="d-grid gap-3">
+
+        {% for line in lines %}
+
+        <div class="border rounded-3 p-3 commercial-line" data-line-row>
+
+          <div class="d-flex justify-content-between align-items-center mb-3"><strong class="text-secondary">Concepto
+              <span data-line-number>{{ loop.index }}</span></strong><button class="btn btn-sm btn-outline-danger"
+              type="button" data-remove-line><i class="bi bi-x-lg"></i> Quitar</button></div>
+
+          <div class="row g-3">
+
+            <div class="col-md-3"><label class="form-label">Tipo *</label><select class="form-select" name="line_kind[]"
+                data-line-kind required>
+                <option value="SERVICIO" {% if line.item_kind=='SERVICIO' %}selected{% endif %}>Servicio</option>
+                <option value="PRODUCTO" {% if line.item_kind=='PRODUCTO' %}selected{% endif %}>Producto / repuesto
+                </option>
+              </select></div>
+
+            <div class="col-md-5"><label class="form-label">Concepto *</label><select class="form-select"
+                name="line_reference[]" data-line-reference data-current-ref="{{ line.reference or '' }}"
+                required></select></div>
+
+            <div class="col-md-4"><label class="form-label">Descripción (opcional)</label><input class="form-control"
+                name="line_description[]" maxlength="250" value="{{ line.description or '' }}"
+                placeholder="Usar nombre del catálogo"></div>
+
+            <div class="col-sm-6"><label class="form-label">Cantidad *</label><input class="form-control"
+                name="line_quantity[]" type="number" min="0.01" step="0.01" value="{{ line.quantity or 1 }}" required>
+            </div>
+
+            <div class="col-sm-6"><label class="form-label">Precio de venta unitario (S/) *</label><input
+                class="form-control" name="line_price[]" type="number" min="0" step="0.01"
+                value="{{ line.unit_price if line.unit_price is not none and line.reference else '' }}"
+                placeholder="Ej. 95.00" required></div>
+
+          </div>
+
+        </div>
+
+        {% endfor %}
+
+      </div>
+
+      {% endif %}
+
+    </div>
+
+  </section>
+
+  <p class="text-muted small mb-2">Al guardar, podrás verificar el detalle y pulsar <strong>Generar venta</strong>. La
+    solicitud seguirá siendo editable hasta ese momento.</p>
+
+  <div class="ui-form-actions"><a href="{{ url_for('admin_sales.sales_requests') }}"
+      class="btn btn-outline-secondary">Cancelar</a><button type="submit" class="btn btn-primary"><i
+        class="bi bi-check2"></i> {{ 'Guardar cambios' if editing else 'Guardar SOLPED y revisar' }}</button></div>
+
+</form>
+
+{% if not origin_order %}
+
+<template id="commercialRowTemplate">
+
+  <div class="border rounded-3 p-3 commercial-line" data-line-row>
+
+    <div class="d-flex justify-content-between align-items-center mb-3"><strong class="text-secondary">Concepto <span
+          data-line-number></span></strong><button class="btn btn-sm btn-outline-danger" type="button"
+        data-remove-line><i class="bi bi-x-lg"></i> Quitar</button></div>
+
+    <div class="row g-3">
+
+      <div class="col-md-3"><label class="form-label">Tipo *</label><select class="form-select" name="line_kind[]"
+          data-line-kind required>
+          <option value="SERVICIO">Servicio</option>
+          <option value="PRODUCTO">Producto / repuesto</option>
+        </select></div>
+
+      <div class="col-md-5"><label class="form-label">Concepto *</label><select class="form-select"
+          name="line_reference[]" data-line-reference required></select></div>
+
+      <div class="col-md-4"><label class="form-label">Descripción (opcional)</label><input class="form-control"
+          name="line_description[]" maxlength="250" placeholder="Usar nombre del catálogo"></div>
+
+      <div class="col-sm-6"><label class="form-label">Cantidad *</label><input class="form-control"
+          name="line_quantity[]" type="number" min="0.01" step="0.01" value="1" required></div>
+
+      <div class="col-sm-6"><label class="form-label">Precio de venta unitario (S/) *</label><input class="form-control"
+          name="line_price[]" type="number" min="0" step="0.01" value="" placeholder="Ej. 95.00" required></div>
+
+    </div>
+
+  </div>
+
+</template>
+
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+
+{% if not origin_order %}
+
+<script id="commercialCatalog"
+  type="application/json">{{ {'services': choices.services, 'products': choices.products}|tojson }}</script>
+
+<script src="{{ url_for('static', filename='js/commercial-request-form.js') }}"></script>
+
+{% endif %}
+
+{% endblock %}

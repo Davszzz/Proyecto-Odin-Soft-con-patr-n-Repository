@@ -1,0 +1,100 @@
+{% extends 'admin/base.html' %} {% from 'admin/_ui_actions.html' import
+action_link, action_post with context %} {% block title %}Inventario{% endblock
+%} {% block content %}
+<header class="ui-page-title">
+  <div>
+    <div class="ui-eyebrow">Gestión de materiales</div>
+    <h1>Productos e insumos</h1>
+    <p>
+      Control de repuestos y materiales disponibles para la atención técnica.
+    </p>
+  </div>
+  <div class="ui-page-actions">
+    <a href="{{ url_for('admin_catalog.inventory_new') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Nuevo
+      material</a>
+  </div>
+</header>
+<div class="ui-alert mb-4">
+  <i class="bi bi-info-circle"></i><span>El consumo de materiales se registra desde el detalle de cada orden; el
+    sistema actualiza el stock al asignar o revertir materiales.</span>
+</div>
+<section class="ui-surface" aria-label="Inventario">
+  <div class="ui-surface__head">
+    <div>
+      <h2>Inventario de materiales</h2>
+      <p>{{ items|length }} productos e insumos registrados</p>
+    </div>
+    <label class="ui-search"><i class="bi bi-search"></i><span class="visually-hidden">Buscar materiales</span><input
+        class="form-control" type="search" data-ui-search="inventoryTable"
+        placeholder="Buscar material o SKU" /></label>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover ui-table" id="inventoryTable">
+      <thead>
+        <tr>
+          <th>Producto / Insumo</th>
+          <th>Tipo</th>
+          <th>Proveedor</th>
+          <th>Stock</th>
+          <th>Costo interno</th>
+          <th>Precio venta</th>
+          <th>Estado</th>
+          <th class="text-end">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td>
+            <div class="ui-title-cell">{{ item.name }}</div>
+            <div class="ui-subline">{{ item.sku or 'Sin SKU' }}</div>
+          </td>
+          <td>
+            <span class="ui-state ui-state--neutral">{{ item.item_type|title }}</span>
+          </td>
+          <td>
+            {{ item.suppliers.name if item.suppliers else 'Sin proveedor' }}
+          </td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <strong>{{ item.stock_quantity }}</strong>{% if
+              item.stock_quantity <= item.min_stock %}<span class="ui-state ui-state--low">Bajo</span>{% endif %}
+            </div>
+            <div class="ui-subline">Mín. {{ item.min_stock }}</div>
+          </td>
+          <td>S/ {{ '%.2f'|format(item.unit_cost|float) }}</td>
+          <td>{{ ('S/ %.2f'|format(item.sale_price|float)) if item.sale_price is not none else 'Sin definir' }}</td>
+          <td>
+            <span class="ui-state {{ 'ui-state--active' if item.active else 'ui-state--inactive' }}">{{ 'Activo' if
+              item.active else 'Inactivo' }}</span>
+          </td>
+          <td class="text-end">
+            <div class="ui-action-group">
+              {{ action_link(url_for('admin_catalog.inventory_edit',
+              item_id=item.id), 'pencil-square', 'Editar material', 'edit') }}{%
+              if item.active %}{{
+              action_post(url_for('admin_catalog.inventory_toggle',
+              item_id=item.id), 'slash-circle', 'Desactivar material', 'danger',
+              '¿Desactivar este material?') }}{% else %}{{
+              action_post(url_for('admin_catalog.inventory_toggle',
+              item_id=item.id), 'check-circle', 'Activar material', 'success',
+              '¿Activar este material?') }}{% endif %}
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8">
+            <div class="ui-empty">
+              <span class="ui-empty__icon"><i class="bi bi-box-seam"></i></span><strong>Inventario
+                vacío</strong>Registra repuestos o insumos
+              para comenzar.
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

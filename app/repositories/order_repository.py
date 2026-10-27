@@ -165,3 +165,11 @@ class OrderRepository:
             return None
 
         return response.data[0]
+
+    def confirm_service_received(self, order_id, user_id):
+        """Registra recepción y cierre con control de propietario en PostgreSQL."""
+        response = supabase.rpc("odin_confirm_service_received", {
+            "p_order_id": order_id,
+            "p_user_id": user_id,
+        }).execute()
+        return response.data

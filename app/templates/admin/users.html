@@ -1,0 +1,91 @@
+{% extends "admin/base.html" %} {% from 'admin/_ui_actions.html' import
+action_link, action_post with context %} {% block title %}Usuarios{% endblock %}
+{% block content %}
+<header class="ui-page-title">
+  <div>
+    <div class="ui-eyebrow">Gestión de accesos</div>
+    <h1>Usuarios</h1>
+    <p>Administra las cuentas de clientes y administradores.</p>
+  </div>
+  <div class="ui-page-actions">
+    <a href="{{ url_for('admin.new_user') }}" class="btn btn-primary"
+      ><i class="bi bi-plus-lg" aria-hidden="true"></i> Nuevo usuario</a
+    >
+  </div>
+</header>
+<section class="ui-surface" aria-label="Directorio de usuarios">
+  <div class="ui-surface__head">
+    <div>
+      <h2>Directorio de usuarios</h2>
+      <p>{{ users|length }} cuentas registradas</p>
+    </div>
+    <label class="ui-search"
+      ><i class="bi bi-search" aria-hidden="true"></i
+      ><span class="visually-hidden">Buscar usuarios</span
+      ><input
+        type="search"
+        class="form-control"
+        placeholder="Buscar nombre o correo"
+        data-ui-search="userTable"
+    /></label>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover ui-table" id="userTable">
+      <thead>
+        <tr>
+          <th>Usuario</th>
+          <th>Teléfono</th>
+          <th>Rol</th>
+          <th>Registro</th>
+          <th class="text-end">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr>
+          <td>
+            <div class="d-flex align-items-center gap-3">
+              <div class="avatar-mini">
+                {{ (user.full_name or '?')[:1]|upper }}
+              </div>
+              <div>
+                <div class="ui-title-cell">{{ user.full_name }}</div>
+                <div class="ui-subline">{{ user.email }}</div>
+              </div>
+            </div>
+          </td>
+          <td>{{ user.phone or '—' }}</td>
+          <td>
+            <span
+              class="ui-state {{ 'ui-state--neutral' if user.role == 'ADMIN' else 'ui-state--inactive' }}"
+              >{{ 'Administrador' if user.role == 'ADMIN' else 'Cliente'
+              }}</span
+            >
+          </td>
+          <td>{{ user.created_at|date_pe }}</td>
+          <td class="text-end">
+            <div class="ui-action-group">
+              {{ action_link(url_for('admin.edit_user', user_id=user.id),
+              'pencil-square', 'Editar usuario', 'edit') }}{{
+              action_post(url_for('admin.delete_user', user_id=user.id),
+              'trash3', 'Eliminar usuario', 'danger', '¿Eliminar este usuario?
+              Esta acción no se puede deshacer.', user.id ==
+              session.get('user_id')) }}
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="5">
+            <div class="ui-empty">
+              <span class="ui-empty__icon"><i class="bi bi-people"></i></span
+              ><strong>Sin usuarios</strong>Aún no hay cuentas registradas.
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

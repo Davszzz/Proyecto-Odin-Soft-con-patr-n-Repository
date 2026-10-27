@@ -1,0 +1,87 @@
+{% extends 'admin/base.html' %} {% from 'admin/_ui_actions.html' import
+action_link, action_post with context %} {% block title %}Servicios técnicos{%
+endblock %} {% block content %}
+<header class="ui-page-title">
+  <div>
+    <div class="ui-eyebrow">Catálogo de atención</div>
+    <h1>Servicios técnicos</h1>
+    <p>Configura los tipos de servicio disponibles al registrar órdenes.</p>
+  </div>
+  <div class="ui-page-actions">
+    <a class="btn btn-primary" href="{{ url_for('admin_catalog.service_new') }}"
+      ><i class="bi bi-plus-lg"></i> Nuevo servicio</a
+    >
+  </div>
+</header>
+<section class="ui-surface" aria-label="Catálogo de servicios">
+  <div class="ui-surface__head">
+    <div>
+      <h2>Servicios disponibles</h2>
+      <p>{{ services|length }} tipos de servicio</p>
+    </div>
+    <label class="ui-search"
+      ><i class="bi bi-search"></i
+      ><span class="visually-hidden">Buscar servicios</span
+      ><input
+        type="search"
+        class="form-control"
+        placeholder="Buscar servicio"
+        data-ui-search="serviceTable"
+    /></label>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover ui-table" id="serviceTable">
+      <thead>
+        <tr>
+          <th>Servicio</th>
+          <th>Descripción</th>
+          <th>Precio venta</th>
+          <th>Estado</th>
+          <th class="text-end">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for service in services %}
+        <tr>
+          <td class="ui-title-cell">{{ service.name }}</td>
+          <td>{{ service.description or '—' }}</td>
+          <td>
+            {{ ('S/ %.2f'|format(service.sale_price|float)) if
+            service.sale_price is not none else 'Sin definir' }}
+          </td>
+          <td>
+            <span
+              class="ui-state {{ 'ui-state--active' if service.active else 'ui-state--inactive' }}"
+              >{{ 'Activo' if service.active else 'Inactivo' }}</span
+            >
+          </td>
+          <td class="text-end">
+            <div class="ui-action-group">
+              {{ action_link(url_for('admin_catalog.service_edit',
+              service_id=service.id), 'pencil-square', 'Editar servicio',
+              'edit') }}{% if service.active %}{{
+              action_post(url_for('admin_catalog.service_toggle',
+              service_id=service.id), 'slash-circle', 'Desactivar servicio',
+              'danger', '¿Desactivar este servicio?') }}{% else %}{{
+              action_post(url_for('admin_catalog.service_toggle',
+              service_id=service.id), 'check-circle', 'Activar servicio',
+              'success', '¿Activar este servicio?') }}{% endif %}
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="5">
+            <div class="ui-empty">
+              <span class="ui-empty__icon"><i class="bi bi-tools"></i></span
+              ><strong>Sin servicios</strong>Agrega un servicio para hacerlo
+              disponible en las órdenes.
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

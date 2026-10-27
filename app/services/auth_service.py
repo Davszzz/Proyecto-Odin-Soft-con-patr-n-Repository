@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from werkzeug.security import (
     generate_password_hash,
     check_password_hash
@@ -64,15 +65,36 @@ class AuthService:
         )
 
     def login(self, email, password):
+
         email = email.strip().lower()
 
-        user = (
-            self.user_repository
-            .find_by_email(email)
+        user = self.user_repository.find_by_email(
+            email
         )
 
         if not user:
-            return None
+            return {
+                "status": "invalid"
+            }
+
+        lock_until = user.get("lock_until")
+
+        if lock_until:
+            lock_until_dt = datetime.fromisoformat(
+                lock_until.replace("Z", "+00:00")
+            )
+
+            now = datetime.now(timezone.utc)
+
+            if lock_until_dt > now:
+                remaining_seconds = int(
+                    (lock_until_dt - now).total_seconds()
+                )
+
+                return {
+                    "status": "temporarily_locked",
+                    "remaining_seconds": remaining_seconds
+                }
 
         valid_password = check_password_hash(
             user["password_hash"],
@@ -80,6 +102,26 @@ class AuthService:
         )
 
         if not valid_password:
-            return None
+            result = self.user_repository.register_failed_attempt(
+                user["id"],
+                lock_seconds=30
+            )
 
-        return user
+            if result["locked"]:
+                return {
+                    "status": "temporarily_locked",
+                    "remaining_seconds": result["remaining_seconds"]
+                }
+
+            return {
+                "status": "invalid"
+            }
+
+        self.user_repository.reset_failed_attempts(
+            user["id"]
+        )
+
+        return {
+            "status": "success",
+            "user": user
+        }

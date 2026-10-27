@@ -1,0 +1,131 @@
+{% extends "admin/base.html" %} {% from "admin/_ui_actions.html" import
+action_post with context %} {% block title %}Dashboard{% endblock %} {% block
+content %}
+<div class="ui-page-title">
+  <div>
+    <div class="ui-eyebrow">VISTA GENERAL</div>
+    <h1>Panel de administración</h1>
+    <p>Gestión centralizada de usuarios y solicitudes técnicas.</p>
+  </div>
+</div>
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-xl-3">
+    <div class="metric-card">
+      <div class="metric-icon blue"><i class="bi bi-people"></i></div>
+      <span>Usuarios registrados</span
+      ><strong>{{ metrics.users_total }}</strong>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="metric-card">
+      <div class="metric-icon purple"><i class="bi bi-receipt-cutoff"></i></div>
+      <span>Órdenes totales</span><strong>{{ metrics.orders_total }}</strong>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="metric-card">
+      <div class="metric-icon amber"><i class="bi bi-arrow-repeat"></i></div>
+      <span>Órdenes activas</span><strong>{{ metrics.orders_active }}</strong>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="metric-card">
+      <div class="metric-icon green"><i class="bi bi-check2-circle"></i></div>
+      <span>Finalizadas</span><strong>{{ metrics.orders_completed }}</strong>
+    </div>
+  </div>
+</div>
+<div class="row g-4">
+  <div class="col-xl-8">
+    <div class="panel-card h-100">
+      <div class="panel-heading">
+        <div>
+          <h2>Últimas órdenes</h2>
+          <p>Actividad reciente registrada en el sistema</p>
+        </div>
+        <a
+          href="{{ url_for('admin.orders') }}"
+          class="btn btn-outline-primary btn-sm"
+          ><i class="bi bi-arrow-up-right"></i> Ver todas</a
+        >
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover ui-table mb-0">
+          <thead>
+            <tr>
+              <th>Orden</th>
+              <th>Cliente</th>
+              <th>Servicio</th>
+              <th>Estado</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in metrics.recent_orders %}
+            <tr>
+              <td class="fw-semibold text-primary">
+                #{{ order.order_number }}
+              </td>
+              <td>{{ (order.users or {}).full_name or '—' }}</td>
+              <td>{{ (order.service_types or {}).name or '—' }}</td>
+              <td>
+                <span
+                  class="status-pill status-{{ (order.order_statuses or {}).code or 'REGISTERED' }}"
+                  >{{ (order.order_statuses or {}).name or '—' }}</span
+                >
+              </td>
+              <td>
+                <div class="ui-action-group">
+                  {{ action_post(url_for('admin.open_order_for_review',
+                  order_id=order.id), 'eye', 'Ver y revisar orden', 'view') }}
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="5" class="text-center text-muted py-5">
+                Todavía no hay órdenes registradas.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-4">
+    <div class="panel-card h-100">
+      <div class="panel-heading">
+        <div>
+          <h2>Accesos rápidos</h2>
+          <p>Operaciones frecuentes</p>
+        </div>
+      </div>
+      <div class="p-4 d-grid gap-3">
+        <a href="{{ url_for('admin.new_user') }}" class="quick-action"
+          ><i class="bi bi-person-plus"></i>
+          <div>
+            <strong>Nuevo usuario</strong><small>Registrar una cuenta</small>
+          </div>
+          <i class="bi bi-chevron-right ms-auto small"></i
+        ></a>
+        <a href="{{ url_for('admin.new_order') }}" class="quick-action"
+          ><i class="bi bi-file-earmark-plus"></i>
+          <div>
+            <strong>Nueva orden</strong><small>Crear un servicio técnico</small>
+          </div>
+          <i class="bi bi-chevron-right ms-auto small"></i
+        ></a>
+        <a href="{{ url_for('admin.users') }}" class="quick-action"
+          ><i class="bi bi-people"></i>
+          <div>
+            <strong>Administrar usuarios</strong
+            ><small>Editar o eliminar cuentas</small>
+          </div>
+          <i class="bi bi-chevron-right ms-auto small"></i
+        ></a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

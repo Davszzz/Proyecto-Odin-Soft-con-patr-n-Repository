@@ -1,0 +1,47 @@
+{# Controles reutilizables para las acciones de las tablas administrativas. #}
+{% macro action_link(href, icon, label, tone='neutral') -%}
+<a
+  href="{{ href }}"
+  class="ui-icon-btn ui-icon-btn--{{ tone }}"
+  title="{{ label }}"
+  aria-label="{{ label }}"
+>
+  <i class="bi bi-{{ icon }}" aria-hidden="true"></i>
+</a>
+{%- endmacro %} {% macro action_post(action, icon, label, tone='danger',
+confirmation='', disabled=false) -%}
+<form
+  class="ui-action-form"
+  method="post"
+  action="{{ action }}"
+  {%
+  if
+  confirmation
+  %}
+  onsubmit="return confirm('{{ confirmation }}');"
+  {%
+  endif
+  %}
+>
+  <input
+    type="hidden"
+    name="csrf_token"
+    value="{{ session.get('admin_csrf_token', '') }}"
+  />
+  <button
+    type="submit"
+    class="ui-icon-btn ui-icon-btn--{{ tone }}"
+    title="{{ label }}"
+    aria-label="{{ label }}"
+    {%
+    if
+    disabled
+    %}
+    disabled{%
+    endif
+    %}
+  >
+    <i class="bi bi-{{ icon }}" aria-hidden="true"></i>
+  </button>
+</form>
+{%- endmacro %}

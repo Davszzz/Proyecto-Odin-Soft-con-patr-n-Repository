@@ -1,0 +1,100 @@
+{% extends 'admin/base.html' %} {% block title %}{{ 'Editar proveedor' if
+editing else 'Nuevo proveedor' }}{% endblock %} {% block content %}
+<a class="ui-back-link" href="{{ url_for('admin_catalog.suppliers') }}"
+  ><i class="bi bi-arrow-left me-1"></i> Volver a proveedores</a
+>
+<div class="mt-3 mb-4">
+  <h1 class="h3 fw-bold">
+    {{ 'Editar proveedor' if editing else 'Nuevo proveedor' }}
+  </h1>
+  <p class="text-muted">Información del proveedor de materiales.</p>
+</div>
+<div class="ui-surface">
+  <div class="card-body p-4">
+    <form method="post">
+      <input
+        type="hidden"
+        name="csrf_token"
+        value="{{ session.get('admin_csrf_token') }}"
+      />
+      <div class="row g-3">
+        <div class="col-md-7">
+          <label class="form-label" for="name">Razón social / nombre *</label
+          ><input
+            class="form-control"
+            id="name"
+            name="name"
+            maxlength="150"
+            value="{{ supplier.get('name', '') }}"
+            required
+          />
+        </div>
+        <div class="col-md-5">
+          <label class="form-label" for="tax_id">RUC o documento</label
+          ><input
+            class="form-control"
+            id="tax_id"
+            name="tax_id"
+            maxlength="20"
+            value="{{ supplier.get('tax_id') or '' }}"
+          />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="contact_name"
+            >Persona de contacto</label
+          ><input
+            class="form-control"
+            id="contact_name"
+            name="contact_name"
+            maxlength="150"
+            value="{{ supplier.get('contact_name') or '' }}"
+          />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="phone">Teléfono</label
+          ><input
+            class="form-control"
+            id="phone"
+            name="phone"
+            maxlength="25"
+            value="{{ supplier.get('phone') or '' }}"
+          />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="email">Correo electrónico</label
+          ><input
+            class="form-control"
+            type="email"
+            id="email"
+            name="email"
+            maxlength="150"
+            value="{{ supplier.get('email') or '' }}"
+          />
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="address">Dirección</label
+          ><textarea
+            class="form-control"
+            id="address"
+            name="address"
+            rows="2"
+            maxlength="500"
+          >
+{{ supplier.get('address') or '' }}</textarea
+          >
+        </div>
+      </div>
+      <div class="ui-form-actions">
+        <a
+          class="btn btn-outline-secondary"
+          href="{{ url_for('admin_catalog.suppliers') }}"
+          >Cancelar</a
+        ><button class="btn btn-primary" type="submit">
+          <i class="bi bi-check2 me-1"></i> {{ 'Guardar cambios' if editing else
+          'Registrar proveedor' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

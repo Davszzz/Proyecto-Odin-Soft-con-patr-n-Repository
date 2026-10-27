@@ -1,3 +1,6 @@
+import hmac
+import secrets
+
 from flask import (
     Blueprint,
     render_template,
@@ -273,7 +276,29 @@ def order_detail(order_id):
     if not order:
         abort(404)
 
+    if not session.get("order_receipt_csrf"):
+        session["order_receipt_csrf"] = secrets.token_urlsafe(32)
+
     return render_template(
         "detalle_orden.html",
         order=order
     )
+
+@orders_bp.post("/orden/<order_id>/confirmar-recepcion")
+@login_required
+def confirm_service_received(order_id):
+    """El cliente certifica que recibió la atención; no selecciona un estado."""
+    expected = session.get("order_receipt_csrf") or ""
+    supplied = request.form.get("csrf_token") or ""
+    if not expected or not hmac.compare_digest(expected, supplied):
+        abort(400, description="Token de seguridad inválido. Recarga la página.")
+    try:
+        order_service.confirm_service_received(order_id, session["user_id"])
+        flash("Recepción confirmada. El estado de la orden y el historial se actualizaron.", "success")
+    except ValueError as exc:
+        flash(str(exc), "warning")
+    except Exception:
+        from flask import current_app
+        current_app.logger.exception("No se pudo confirmar la recepción")
+        flash("No se pudo confirmar la recepción. Vuelve a intentarlo.", "danger")
+    return redirect(url_for("orders.order_detail", order_id=order_id))

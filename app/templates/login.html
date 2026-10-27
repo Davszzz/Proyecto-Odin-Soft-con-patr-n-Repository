@@ -1,125 +1,174 @@
-{% extends "base.html" %}
-
-{% block title %}
-Iniciar sesión | Odin Soft
-{% endblock %}
-
-
-{% block content %}
+{% extends "base.html" %} {% block title %} Iniciar sesión | Odin Soft {%
+endblock %} {% block content %}
 
 <div class="auth-page">
+  <div class="auth-card">
+    <div class="card odin-card shadow-sm">
+      <div class="card-body p-5">
+        <!-- LOGO -->
 
-    <div class="auth-card">
-
-        <div class="card odin-card">
-
-            <div class="card-body p-5">
-
-                <div class="text-center mb-4">
-
-                    <img
-                        src="{{ url_for('static', filename='img/odinsoft-logo.png') }}"
-                        alt="Odin Soft"
-                        class="auth-logo"
-                    >
-
-                </div>
-
-
-                <form method="POST">
-
-                    <div class="mb-3">
-
-                        <label
-                            for="email"
-                            class="form-label"
-                        >
-                            Correo electrónico
-                        </label>
-
-                        <div class="input-group">
-
-                            <span class="input-group-text bg-white">
-                                <i class="bi bi-envelope"></i>
-                            </span>
-
-                            <input
-                                type="email"
-                                id="email"
-                                name="email"
-                                class="form-control"
-                                placeholder="correo@ejemplo.com"
-                                autocomplete="email"
-                                required
-                            >
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="mb-4">
-
-                        <label
-                            for="password"
-                            class="form-label"
-                        >
-                            Contraseña
-                        </label>
-
-                        <div class="input-group">
-
-                            <span class="input-group-text bg-white">
-                                <i class="bi bi-lock"></i>
-                            </span>
-
-                            <input
-                                type="password"
-                                id="password"
-                                name="password"
-                                class="form-control"
-                                placeholder="Ingrese su contraseña"
-                                autocomplete="current-password"
-                                required
-                            >
-
-                        </div>
-
-                    </div>
-
-
-                    <button
-                        type="submit"
-                        class="btn btn-odin w-100"
-                    >
-                        <i class="bi bi-box-arrow-in-right me-1"></i>
-                        Iniciar sesión
-                    </button>
-
-                </form>
-
-
-                <div class="text-center mt-4">
-
-                    <span class="text-muted">
-                        ¿Todavía no tiene una cuenta?
-                    </span>
-
-                    <a
-                        href="{{ url_for('auth.register') }}"
-                        class="text-decoration-none fw-semibold ms-1"
-                    >
-                        Crear cuenta
-                    </a>
-
-                </div>
-
-            </div>
-
+        <div class="text-center mb-4">
+          <img
+            src="{{ url_for('static', filename='img/odinsoft-logo.png') }}"
+            alt="Odin Soft"
+            class="auth-logo"
+          />
         </div>
 
+        {% if locked | default(false) %}
+
+        <!-- BLOQUEO TEMPORAL -->
+
+        <div class="text-center">
+          <img
+            src="{{ url_for('static', filename='img/too-many-attempts.jpg') }}"
+            alt="Demasiados intentos de inicio de sesión"
+            class="img-fluid mb-4"
+            style="max-width: 220px; max-height: 220px"
+          />
+
+          <h3 class="fw-bold mb-3" style="color: #b42318">
+            Demasiados intentos
+          </h3>
+
+          <p class="text-muted mb-4">
+            Has realizado tres intentos incorrectos de inicio de sesión. Por
+            seguridad, el acceso se ha suspendido temporalmente.
+          </p>
+
+          <div class="rounded-3 p-4 mb-4" style="background-color: #fff4ed">
+            <p class="mb-2 fw-semibold">Podrás volver a intentarlo en:</p>
+
+            <div
+              id="countdown"
+              class="display-5 fw-bold"
+              style="color: #b54708"
+              aria-live="off"
+            >
+              {{ remaining_seconds | default(30) }}
+            </div>
+
+            <span class="text-muted"> segundos </span>
+          </div>
+
+          <p class="small text-muted mb-0">
+            Cuando termine el tiempo de espera, podrás iniciar sesión
+            nuevamente.
+          </p>
+        </div>
+
+        {% else %}
+
+        <!-- FORMULARIO DE LOGIN -->
+
+        <form method="POST" action="{{ url_for('auth.login') }}">
+          <!-- EMAIL -->
+
+          <div class="mb-3">
+            <label for="email" class="form-label"> Correo electrónico </label>
+
+            <div class="input-group">
+              <span class="input-group-text bg-white">
+                <i class="bi bi-envelope"></i>
+              </span>
+
+              <input
+                type="email"
+                id="email"
+                name="email"
+                class="form-control"
+                placeholder="correo@ejemplo.com"
+                autocomplete="email"
+                required
+              />
+            </div>
+          </div>
+
+          <!-- CONTRASEÑA -->
+
+          <div class="mb-4">
+            <label for="password" class="form-label"> Contraseña </label>
+
+            <div class="input-group">
+              <span class="input-group-text bg-white">
+                <i class="bi bi-lock"></i>
+              </span>
+
+              <input
+                type="password"
+                id="password"
+                name="password"
+                class="form-control"
+                placeholder="Ingrese su contraseña"
+                autocomplete="current-password"
+                required
+              />
+            </div>
+          </div>
+
+          <!-- BOTÓN LOGIN -->
+
+          <button type="submit" class="btn btn-odin w-100">
+            <i class="bi bi-box-arrow-in-right me-1"></i>
+            Iniciar sesión
+          </button>
+        </form>
+
+        <!-- REGISTRO -->
+
+        <div class="text-center mt-4">
+          <span class="text-muted"> ¿Todavía no tiene una cuenta? </span>
+
+          <a
+            href="{{ url_for('auth.register') }}"
+            class="text-decoration-none fw-semibold ms-1"
+          >
+            Crear cuenta
+          </a>
+        </div>
+
+        {% endif %}
+      </div>
     </div>
 
+    <p class="text-center text-muted small mt-3">
+      Portal de gestión de servicios técnicos
+    </p>
+  </div>
 </div>
 
-{% endblock %}
+<!-- CONTADOR REGRESIVO -->
+
+{% if locked | default(false) %}
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const countdown = document.getElementById("countdown");
+
+    let seconds = Math.max(
+      0,
+      Number("{{ remaining_seconds | default(30) | int }}"),
+    );
+
+    if (seconds <= 0) {
+      window.location.replace("{{ url_for('auth.login') }}");
+      return;
+    }
+
+    const endTime = Date.now() + seconds * 1000;
+
+    const interval = setInterval(function () {
+      seconds = Math.max(0, Math.ceil((endTime - Date.now()) / 1000));
+
+      countdown.textContent = seconds;
+
+      if (seconds <= 0) {
+        clearInterval(interval);
+
+        window.location.replace("{{ url_for('auth.login') }}");
+      }
+    }, 250);
+  });
+</script>
+
+{% endif %} {% endblock %}
