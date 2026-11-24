@@ -50,6 +50,11 @@ else 'Nuevo servicio' }}{% endblock %} {% block content %}
         </div>
       </div>
       <div class="mb-3">
+        <label class="form-label" for="estimated_unit_cost">Costo estimado del servicio (S/)</label>
+        <input name="estimated_unit_cost" id="estimated_unit_cost" class="form-control" type="number" min="0" max="9999999999.99" step="0.01" value="{{ service.get('estimated_unit_cost') if service.get('estimated_unit_cost') is not none else '' }}" placeholder="Sin costo definido">
+        <div class="form-text">Incluye mano de obra e insumos internos; se conserva como costo de referencia al generar una venta.</div>
+      </div>
+      <div class="mb-3">
         <label class="form-label" for="description">Descripción</label
         ><textarea
           class="form-control"

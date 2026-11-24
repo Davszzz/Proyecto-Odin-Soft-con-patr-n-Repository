@@ -18,6 +18,8 @@ from app.routes.admin_routes import admin_bp
 from app.routes.admin_catalog_routes import admin_catalog_bp
 from app.routes.admin_material_routes import admin_material_bp
 from app.routes.admin_sales_routes import admin_sales_bp
+from app.routes.admin_report_routes import admin_report_bp
+from app.repositories.user_repository import UserRepository
 
 
 load_dotenv()
@@ -117,6 +119,8 @@ def create_app():
         admin_sales_bp
     )
 
+    app.register_blueprint(admin_report_bp)
+
     @app.route("/")
     def index():
 
@@ -125,6 +129,10 @@ def create_app():
                 url_for("auth.login")
             )
 
+        user = UserRepository().find_by_id(session['user_id'])
+        if not user or not user.get('active', True) or user.get('role') != session.get('user_role'):
+            session.clear()
+            return redirect(url_for('auth.login'))
         if session.get("user_role") == "ADMIN":
             return redirect(
                 url_for("admin.dashboard")

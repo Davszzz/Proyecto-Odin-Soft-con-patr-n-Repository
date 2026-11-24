@@ -1,0 +1,45 @@
+{% extends 'admin/base.html' %}
+{% block title %}Reportería{% endblock %}
+{% block content %}
+<header class="ui-page-title"><div><div class="ui-eyebrow">Etapa 7 · Análisis</div><h1>Reportería</h1><p>Consulta indicadores de gestión, visualiza sus datos y descarga cada reporte en Excel.</p></div></header>
+<div class="row g-3 mb-4">
+{% for key, group in groups.items() %}
+<div class="col-6 col-xl"><div class="ui-surface p-3 h-100"><div class="text-muted small">{{ group[0] }}</div><div class="fs-3 fw-bold text-primary">{{ group[1]|length }}</div><span class="small text-muted">reportes disponibles</span></div></div>
+{% endfor %}
+</div>
+<section class="ui-surface mb-4">
+ <div class="ui-surface__head"><div><h2>Consultar reporte</h2><p>Selecciona uno de los 55 reportes solicitados.</p></div></div>
+ <div class="ui-surface__body">
+ <form id="reportFilters" method="get" data-base="{{ url_for('admin_report.home') }}">
+  <div class="row g-3 align-items-end">
+   <div class="col-lg-5"><label class="form-label" for="reportCode">Reporte</label><select class="form-select" id="reportCode" required><option value="">Seleccionar reporte...</option>
+   {% for key, group in groups.items() %}<optgroup label="{{ group[0] }}">{% for item in group[1] %}{% set opt = key ~ '-' ~ loop.index %}<option value="{{ opt }}" {% if code == opt %}selected{% endif %}>{{ loop.index }}. {{ item }}</option>{% endfor %}</optgroup>{% endfor %}
+   </select></div>
+   <div class="col-sm-4 col-lg-2"><label class="form-label" for="desde">Desde</label><input id="desde" name="desde" type="date" class="form-control" value="{{ request.args.get('desde','') }}"></div>
+   <div class="col-sm-4 col-lg-2"><label class="form-label" for="hasta">Hasta</label><input id="hasta" name="hasta" type="date" class="form-control" value="{{ request.args.get('hasta','') }}"></div>
+   <div class="col-sm-4 col-lg-2"><label class="form-label" for="agrupar">Agrupar por</label><select name="agrupar" id="agrupar" class="form-select">{% for v,t in [('dia','Día'),('semana','Semana'),('mes','Mes'),('anio','Año')] %}<option value="{{ v }}" {% if request.args.get('agrupar','mes') == v %}selected{% endif %}>{{ t }}</option>{% endfor %}</select></div>
+   <div class="col-lg-1"><button type="submit" class="btn btn-primary w-100" title="Consultar"><i class="bi bi-search"></i></button></div>
+  </div>
+  <div id="filterHelp" class="form-text mt-2">Deja las fechas vacías para consultar el historial disponible. La agrupación se usa en reportes temporales.</div>
+ </form></div>
+</section>
+{% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
+{% if report %}
+<section class="ui-surface mb-4">
+ <div class="ui-surface__head d-flex flex-wrap justify-content-between align-items-center gap-3"><div><h2>{{ report.title }}</h2><p class="mb-0">{{ report.rows|length }} filas en el resultado</p></div><a class="btn btn-outline-primary" href="{{ url_for('admin_report.excel',code=code,desde=request.args.get('desde',''),hasta=request.args.get('hasta',''),agrupar=request.args.get('agrupar','mes')) }}"><i class="bi bi-file-earmark-excel me-1"></i> Descargar Excel</a></div>
+ <div class="ui-surface__body"><p class="text-muted small">{{ report.note }}</p>{% if tracking %}<p class="text-muted small">Inicio de nuevas bitácoras: {{ tracking|datetime_pe }} (Lima).</p>{% endif %}<div id="reportChart" role="img" aria-label="Gráfico de {{ report.title }}" style="width:100%;height:360px;min-height:250px"></div><div id="chartNote" class="text-muted small"></div></div>
+</section>
+<section class="ui-surface"><div class="ui-surface__head"><h2>Datos del reporte</h2></div><div class="ui-surface__body"><label for="tableSearch" class="form-label">Buscar en los resultados</label><input class="form-control" id="tableSearch" type="search" placeholder="Buscar..." autocomplete="off"></div>
+<div class="table-responsive"><table class="table ui-table table-hover"><thead><tr>{% for col in report.columns %}<th scope="col">{{ col }}</th>{% endfor %}</tr></thead><tbody id="reportRows">{% for row in report.rows[:50] %}<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>{% else %}<tr><td colspan="{{ report.columns|length }}" class="text-center text-muted py-4">Sin registros para los filtros seleccionados.</td></tr>{% endfor %}</tbody></table></div>
+<div class="ui-surface__body d-flex justify-content-between flex-wrap align-items-center gap-2"><span id="pageInfo" class="small text-muted"></span><div class="btn-group"><button id="prevPage" type="button" class="btn btn-outline-secondary btn-sm">Anterior</button><button id="nextPage" type="button" class="btn btn-outline-secondary btn-sm">Siguiente</button></div></div>
+</section>
+<script id="reportPayload" type="application/json">{{ {'rows':report.rows,'chart':report.chart,'columns':report.columns}|tojson }}</script>
+{% else %}
+<div class="ui-surface p-4"><h2 class="h5 fw-bold">Fuentes de información</h2><p class="text-muted mb-2">Los reportes utilizan los registros reales de Odin Soft. Para completar compras, recepciones y evaluación, utiliza el módulo de compras. Los cobros se registran desde cada venta confirmada.</p><a class="btn btn-outline-primary" href="{{ url_for('admin_report.purchases') }}">Compras y recepciones</a> <a class="btn btn-outline-secondary" href="{{ url_for('admin_sales.sales') }}">Ir a ventas</a></div>
+{% endif %}
+<script id="snapshotPayload" type="application/json">{{ snapshot_ids|tojson }}</script>
+{% endblock %}
+{% block scripts %}
+{% if report %}<script src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js"></script>{% endif %}
+<script src="{{ url_for('static',filename='js/reports.js') }}" defer></script>
+{% endblock %}

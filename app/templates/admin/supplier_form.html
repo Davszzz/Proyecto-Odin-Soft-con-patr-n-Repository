@@ -71,6 +71,11 @@ editing else 'Nuevo proveedor' }}{% endblock %} {% block content %}
             value="{{ supplier.get('email') or '' }}"
           />
         </div>
+        {% for field, caption in [('category','Categoría de proveedor'),('location','Ubicación (ciudad o distrito)')] %}
+        <div class="col-md-6"><label class="form-label" for="{{ field }}">{{ caption }}</label>
+          <input id="{{ field }}" name="{{ field }}" class="form-control" maxlength="120" value="{{ supplier.get(field) or '' }}">
+        </div>
+        {% endfor %}
         <div class="col-12">
           <label class="form-label" for="address">Dirección</label
           ><textarea

@@ -97,6 +97,9 @@ endblock %} {% block content %}
     <h2>Acciones de venta</h2>
   </div>
   <div class="ui-surface__body d-flex gap-2 flex-wrap align-items-center">
+    {% if sale.status == 'CONFIRMADA' %}
+    <a class="btn btn-outline-primary" href="{{ url_for('admin_report.sale_payments',sale_id=sale.id) }}"><i class="bi bi-wallet2 me-1"></i> Cobros de venta</a>
+    {% endif %}
     {% if sale.status == 'REGISTRADA' %}
     <form method="post" action="{{ url_for('admin_sales.sale_action',sale_id=sale.id,action='confirmar') }}">
       <input type="hidden" name="csrf_token" value="{{ session.admin_csrf_token }}" /><button type="submit"

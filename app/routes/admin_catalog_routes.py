@@ -29,7 +29,7 @@ def only_admin():
         return redirect(url_for("auth.login"))
 
     user = UserRepository().find_by_id(session["user_id"])
-    if not user or user.get("role") != "ADMIN":
+    if not user or not user.get("active", True) or user.get("role") != "ADMIN":
         abort(403, description="Acceso exclusivo para administradores.")
 
     if not session.get("admin_csrf_token"):

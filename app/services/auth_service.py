@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from app.repositories.report_repository import ReportRepository
 from werkzeug.security import (
     generate_password_hash,
     check_password_hash
@@ -11,6 +11,7 @@ class AuthService:
 
     def __init__(self):
         self.user_repository = UserRepository()
+        self.reports = ReportRepository()
 
     def register(
         self,
@@ -60,68 +61,20 @@ class AuthService:
             "role": "CLIENT"
         }
 
-        return self.user_repository.create(
-            user_data
-        )
+        user = self.user_repository.create(user_data)
+        if user:
+            self.reports.access(user, 'REGISTRO')
+        return user
 
     def login(self, email, password):
-
-        email = email.strip().lower()
-
-        user = self.user_repository.find_by_email(
-            email
-        )
-
+        user = self.user_repository.find_by_email(email.strip().lower())
         if not user:
-            return {
-                "status": "invalid"
-            }
-
-        lock_until = user.get("lock_until")
-
-        if lock_until:
-            lock_until_dt = datetime.fromisoformat(
-                lock_until.replace("Z", "+00:00")
-            )
-
-            now = datetime.now(timezone.utc)
-
-            if lock_until_dt > now:
-                remaining_seconds = int(
-                    (lock_until_dt - now).total_seconds()
-                )
-
-                return {
-                    "status": "temporarily_locked",
-                    "remaining_seconds": remaining_seconds
-                }
-
-        valid_password = check_password_hash(
-            user["password_hash"],
-            password
-        )
-
-        if not valid_password:
-            result = self.user_repository.register_failed_attempt(
-                user["id"],
-                lock_seconds=30
-            )
-
-            if result["locked"]:
-                return {
-                    "status": "temporarily_locked",
-                    "remaining_seconds": result["remaining_seconds"]
-                }
-
-            return {
-                "status": "invalid"
-            }
-
-        self.user_repository.reset_failed_attempts(
-            user["id"]
-        )
-
-        return {
-            "status": "success",
-            "user": user
-        }
+            # No almacenar correos ingresados para cuentas inexistentes.
+            self.reports.access(None, 'FALLIDO')
+            return {'status': 'invalid'}
+        valid = check_password_hash(user['password_hash'], password)
+        # PostgreSQL vuelve a comprobar bloqueo y estado activo bajo FOR UPDATE.
+        result = self.reports.login_result(user['id'], valid)
+        if result['status'] == 'success':
+            result['user'] = user
+        return result

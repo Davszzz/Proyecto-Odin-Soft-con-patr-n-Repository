@@ -35,6 +35,8 @@ class SupplierService:
             "email": email.lower() if email else None,
             "phone": self._optional_text(form, "phone", 25),
             "address": self._optional_text(form, "address", 500),
+            "category": self._optional_text(form, "category", 120),
+            "location": self._optional_text(form, "location", 120),
         }
 
     def _check_tax_id(self, tax_id, supplier_id=None):

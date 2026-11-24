@@ -36,6 +36,7 @@ action_link, action_post with context %} {% block title %}Usuarios{% endblock %}
           <th>Usuario</th>
           <th>Teléfono</th>
           <th>Rol</th>
+          <th>Estado</th>
           <th>Registro</th>
           <th class="text-end">Acciones</th>
         </tr>
@@ -62,6 +63,7 @@ action_link, action_post with context %} {% block title %}Usuarios{% endblock %}
               }}</span
             >
           </td>
+          <td><span class="ui-state {{ 'ui-state--active' if user.active else 'ui-state--inactive' }}">{{ 'Activo' if user.active else 'Inactivo' }}</span></td>
           <td>{{ user.created_at|date_pe }}</td>
           <td class="text-end">
             <div class="ui-action-group">
@@ -76,7 +78,7 @@ action_link, action_post with context %} {% block title %}Usuarios{% endblock %}
         </tr>
         {% else %}
         <tr>
-          <td colspan="5">
+          <td colspan="6">
             <div class="ui-empty">
               <span class="ui-empty__icon"><i class="bi bi-people"></i></span
               ><strong>Sin usuarios</strong>Aún no hay cuentas registradas.

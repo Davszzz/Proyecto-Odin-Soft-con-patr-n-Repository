@@ -223,6 +223,14 @@
                 Servicios técnicos
               </a>
 
+              <div class="sb-sidenav-menu-heading">Análisis</div>
+              <a class="nav-link {% if section == 'reports' %}active{% endif %}" href="{{ url_for('admin_report.home') }}">
+                <div class="sb-nav-link-icon"><i class="bi bi-bar-chart-line"></i></div> Reportería
+              </a>
+              <a class="nav-link" href="{{ url_for('admin_report.purchases') }}">
+                <div class="sb-nav-link-icon"><i class="bi bi-box-arrow-in-down"></i></div> Compras y recepciones
+              </a>
+
               <!-- ACCIONES RÁPIDAS -->
 
               <div class="sb-sidenav-menu-heading">Acciones rápidas</div>

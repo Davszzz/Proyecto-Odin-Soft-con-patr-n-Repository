@@ -75,7 +75,14 @@ class AdminService:
             raise ValueError("Rol no permitido.")
         if (not editing or password) and len(password) < 8:
             raise ValueError("La contraseña debe tener al menos 8 caracteres.")
-        return {"full_name": name, "email": email, "phone": phone, "role": role}, password
+        extra = {field: (form.get(field) or '').strip() or None for field in ('department', 'location', 'segment')}
+        if any(len(v or '') > 120 for v in extra.values()):
+            raise ValueError('Los campos de clasificación admiten hasta 120 caracteres.')
+        active = form.get('active', '1')
+        if active not in ('0', '1'):
+            raise ValueError('Estado de cuenta no válido.')
+        return {"full_name": name, "email": email, "phone": phone, "role": role,
+                "active": active == '1', **extra}, password
 
     def create_user(self, form):
         values, password = self._validate_user(form)
@@ -89,8 +96,8 @@ class AdminService:
         if not existing:
             raise ValueError("Usuario no encontrado.")
         values, password = self._validate_user(form, editing=True)
-        if user_id == current_user_id and values["role"] != "ADMIN":
-            raise ValueError("No puede retirarse a sí mismo el rol ADMIN.")
+        if user_id == current_user_id and (values["role"] != "ADMIN" or not values["active"]):
+            raise ValueError("No puede desactivar su cuenta ni retirarse el rol ADMIN.")
         same_email = self.repo.find_email(values["email"])
         if same_email and same_email["id"] != user_id:
             raise ValueError("El correo ya pertenece a otra cuenta.")

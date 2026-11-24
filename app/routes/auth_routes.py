@@ -102,10 +102,13 @@ def login():
         email = request.form.get("email", "")
         password = request.form.get("password", "")
 
-        result = auth_service.login(
-            email,
-            password
-        )
+        try:
+            result = auth_service.login(email, password)
+        except Exception:
+            from flask import current_app
+            current_app.logger.exception('No se pudo comprobar el acceso')
+            flash('No se pudo validar el acceso. Verifica la conexión e inténtalo nuevamente.', 'danger')
+            return render_template('login.html'), 503
 
         if result["status"] == "temporarily_locked":
             return render_template(
@@ -145,7 +148,12 @@ def login():
 
 @auth_bp.route("/logout")
 def logout():
-
+    if session.get('user_id'):
+        try:
+            auth_service.reports.access({'id': session['user_id'], 'full_name': session.get('user_name')}, 'SALIDA')
+        except Exception:
+            from flask import current_app
+            current_app.logger.exception('No se pudo registrar salida')
     session.clear()
 
     return redirect(

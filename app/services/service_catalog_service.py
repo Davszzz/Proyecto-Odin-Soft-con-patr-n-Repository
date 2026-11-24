@@ -32,7 +32,15 @@ class ServiceCatalogService:
                     value > Decimal("9999999999.99") or value.as_tuple().exponent < -2):
                 raise ValueError("El precio de venta debe ser positivo o cero y tener máximo dos decimales.")
             sale_price = str(value.quantize(Decimal("0.01")))
-        return {"name": name, "description": description, "sale_price": sale_price}
+        cost = str(form.get('estimated_unit_cost') or '').strip()
+        try:
+            amount = Decimal(cost) if cost else None
+            if amount is not None and (not amount.is_finite() or amount < 0 or amount > Decimal('9999999999.99') or amount.as_tuple().exponent < -2):
+                raise InvalidOperation
+        except InvalidOperation:
+            raise ValueError('Costo estimado inválido; usa hasta dos decimales.') from None
+        return {"name": name, "description": description, "sale_price": sale_price,
+                "estimated_unit_cost": str(amount) if amount is not None else None}
 
     def create(self, form):
         return self.repository.create(self._validate(form))

@@ -6,7 +6,7 @@ from app.config import supabase
 
 
 class AdminRepository:
-    USER_FIELDS = "id,full_name,email,phone,role,created_at"
+    USER_FIELDS = "id,full_name,email,phone,role,created_at,active,department,location,segment"
     ORDER_LIST_FIELDS = """
         id,order_number,user_id,equipment_id,service_type_id,
         urgency_level_id,status_id,problem_description,created_at,
@@ -104,6 +104,9 @@ class AdminRepository:
         original = self.get_order(order_id)
         if not original:
             return False
+        if (supabase.table("order_inventory_items").select("order_id").eq("order_id", order_id).limit(1).execute().data or
+                supabase.table("sales_requests").select("id").eq("service_order_id", order_id).limit(1).execute().data):
+            raise ValueError("La orden tiene materiales o solicitudes comerciales vinculadas.")
         for table in ("order_additional_services", "order_status_history"):
             supabase.table(table).delete().eq("order_id", order_id).execute()
         result = (supabase.table("service_orders").delete().eq("id", order_id)
