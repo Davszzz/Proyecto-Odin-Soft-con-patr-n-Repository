@@ -6,10 +6,12 @@ import hmac
 import secrets
 from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, send_file, session, url_for
 from app.repositories.user_repository import UserRepository
+from app.services.audit_service import AuditService
 from app.repositories.report_repository import ReportRepository
 from app.services.report_service import GROUPS, REPORTS, SNAPSHOTS, ReportService
 from app.services.report_operations_service import ReportOperationsService
 from app.utils.report_xlsx import export_report
+from app.utils.purchase_table import purchase_table
 
 admin_report_bp = Blueprint('admin_report', __name__, url_prefix='/admin/reportes')
 
@@ -62,9 +64,12 @@ def excel(code):
 
 @admin_report_bp.get('/operacion/compras')
 def purchases():
-    data=ReportOperationsService().purchasing(); page=max(1,request.args.get('pagina',1,type=int)); total=len(data['purchases']); pages=max(1,(total+29)//30); page=min(page,pages)
-    data['purchases']=data['purchases'][(page-1)*30:page*30]
-    return render_template('admin/report_purchases.html',**data,page=page,pages=pages,today=datetime.now(ZoneInfo('America/Lima')).date().isoformat(),section='reports')
+    data=ReportOperationsService().purchasing()
+    data.update(purchase_table(data['purchases'], request.args.get('orden','ordered_on'),
+        request.args.get('direccion','desc'), request.args.get('pagina',1,type=int),
+        request.args.get('cantidad',10,type=int)))
+    audit_by_id = AuditService().for_records('supplier_purchases', [p['id'] for p in data['purchases']])
+    return render_template('admin/report_purchases.html',**data,audit_by_id=audit_by_id,today=datetime.now(ZoneInfo('America/Lima')).date().isoformat(),section='reports')
 
 @admin_report_bp.post('/operacion/compras/<action>')
 def purchase_action(action):

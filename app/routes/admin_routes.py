@@ -6,6 +6,7 @@ from flask import (
     request, session, url_for
 )
 from app.repositories.user_repository import UserRepository
+from app.services.audit_service import AuditService
 from app.services.admin_service import AdminService
 from app.services.sales_request_service import SalesRequestService
 
@@ -82,7 +83,8 @@ def edit_user(user_id):
         except Exception:
             flash("No se pudo actualizar el usuario.", "danger")
     return render_template(
-        "admin/user_form.html", user=user, section="users", editing=True
+        "admin/user_form.html", user=user, section="users", editing=True,
+        audit_info=AuditService().for_record("users", user_id)
     )
 
 
@@ -155,7 +157,8 @@ def order_detail(order_id):
     return render_template(
         "admin/order_detail.html", order=order, section="orders",
         linked_requests=linked_requests, active_request=active_request,
-        next_statuses=admin_service.available_status_transitions(order)
+        next_statuses=admin_service.available_status_transitions(order),
+        audit_info=AuditService().for_record("service_orders", order_id)
     )
 
 
@@ -175,6 +178,7 @@ def edit_order(order_id):
             flash("No se pudo actualizar la orden.", "danger")
     return render_template(
         "admin/order_form.html", order=order, editing=True,
+        audit_info=AuditService().for_record("service_orders", order_id),
         users=admin_service.users(), catalogs=admin_service.catalogs(),
         section="orders"
     )

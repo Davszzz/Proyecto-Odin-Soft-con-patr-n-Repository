@@ -31,31 +31,33 @@ action_link with context %} {% block title %}Solicitudes de pedido{% endblock %}
         type="search"
         placeholder="Número, cliente o estado"
         data-ui-search="salesRequestTable"
+        data-search-columns="0,1,2"
+        data-search-filters='{"Estado": 3}'
     /></label>
   </div>
   <div class="table-responsive">
-    <table class="table table-hover ui-table" id="salesRequestTable">
+    <table data-sort-column="4" data-sort-direction="desc" class="table table-hover ui-table" id="salesRequestTable">
       <thead>
         <tr>
-          <th>Solicitud</th>
-          <th>Cliente</th>
-          <th>Orden técnica</th>
-          <th>Estado</th>
-          <th>Fecha</th>
-          <th class="text-end">Acciones</th>
+          <th data-sort-type="number">Solicitud</th>
+          <th data-sort-type="text">Cliente</th>
+          <th data-sort-type="number">Orden técnica</th>
+          <th data-sort-type="text">Estado</th>
+          <th data-sort-type="date">Fecha</th>
+          <th data-sort-type="none" class="text-end">Acciones</th>
         </tr>
       </thead>
       <tbody>
         {% for item in records %}
         <tr>
-          <td class="ui-title-cell">
+          <td data-sort-value="{{ (item.request_number)|default('') }}" class="ui-title-cell">
             SOLPED-{{ '%05d'|format(item.request_number|int) }}
           </td>
-          <td>
+          <td data-sort-value="{{ ((item.users or {}).full_name or '')|default('') }}">
             <strong>{{ (item.users or {}).full_name or '—' }}</strong>
             <div class="ui-subline">{{ (item.users or {}).email or '' }}</div>
           </td>
-          <td>
+          <td data-sort-value="{{ (item.service_orders.order_number if item.service_orders else '')|default('') }}">
             {{ '#' ~ item.service_orders.order_number if item.service_orders
             else 'Sin asociación' }}
           </td>
@@ -65,7 +67,7 @@ action_link with context %} {% block title %}Solicitudes de pedido{% endblock %}
               >{{ item.status|capitalize }}</span
             >
           </td>
-          <td>{{ item.created_at|date_pe }}</td>
+          <td data-sort-value="{{ (item.created_at)|default('') }}">{{ item.created_at|date_pe }}</td>
           <td class="text-end">
             <div class="ui-action-group">
               {{

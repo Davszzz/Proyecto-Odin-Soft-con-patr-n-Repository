@@ -31,7 +31,7 @@ _shared_client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def _request_client():
     """Headers privados para auditoría, sin mutar el cliente compartido."""
-    if not has_request_context() or request.method != 'POST':
+    if not has_request_context() or (request.method not in ('POST', 'PUT', 'PATCH', 'DELETE') and request.endpoint != 'auth.logout'):
         return _shared_client
     if 'odin_db' not in g:
         headers = {'X-Odin-Endpoint': request.endpoint or ''}

@@ -26,26 +26,28 @@ action_link, action_post with context %} {% block title %}Inventario{% endblock
     </div>
     <label class="ui-search"><i class="bi bi-search"></i><span class="visually-hidden">Buscar materiales</span><input
         class="form-control" type="search" data-ui-search="inventoryTable"
+        data-search-columns="0,2"
+        data-search-filters='{"Tipo": 1, "Disponibilidad": "availability", "Estado": 6}'
         placeholder="Buscar material o SKU" /></label>
   </div>
   <div class="table-responsive">
-    <table class="table table-hover ui-table" id="inventoryTable">
+    <table data-sort-column="0" data-sort-direction="asc" class="table table-hover ui-table" id="inventoryTable">
       <thead>
         <tr>
-          <th>Producto / Insumo</th>
-          <th>Tipo</th>
-          <th>Proveedor</th>
-          <th>Stock</th>
-          <th>Costo interno</th>
-          <th>Precio venta</th>
-          <th>Estado</th>
-          <th class="text-end">Acciones</th>
+          <th data-sort-type="text">Producto / Insumo</th>
+          <th data-sort-type="text">Tipo</th>
+          <th data-sort-type="text">Proveedor</th>
+          <th data-sort-type="number">Stock</th>
+          <th data-sort-type="number">Costo interno</th>
+          <th data-sort-type="number">Precio venta</th>
+          <th data-sort-type="text">Estado</th>
+          <th data-sort-type="none" class="text-end">Acciones</th>
         </tr>
       </thead>
       <tbody>
         {% for item in items %}
-        <tr>
-          <td>
+        <tr data-search-availability="{{ 'Agotado' if item.stock_quantity <= 0 else 'Stock bajo' if item.stock_quantity <= item.min_stock else 'Disponible' }}">
+          <td data-sort-value="{{ (item.name)|default('') }}">
             <div class="ui-title-cell">{{ item.name }}</div>
             <div class="ui-subline">{{ item.sku or 'Sin SKU' }}</div>
           </td>
@@ -55,15 +57,15 @@ action_link, action_post with context %} {% block title %}Inventario{% endblock
           <td>
             {{ item.suppliers.name if item.suppliers else 'Sin proveedor' }}
           </td>
-          <td>
+          <td data-sort-value="{{ (item.stock_quantity)|default('') }}">
             <div class="d-flex align-items-center gap-2">
               <strong>{{ item.stock_quantity }}</strong>{% if
               item.stock_quantity <= item.min_stock %}<span class="ui-state ui-state--low">Bajo</span>{% endif %}
             </div>
             <div class="ui-subline">Mín. {{ item.min_stock }}</div>
           </td>
-          <td>S/ {{ '%.2f'|format(item.unit_cost|float) }}</td>
-          <td>{{ ('S/ %.2f'|format(item.sale_price|float)) if item.sale_price is not none else 'Sin definir' }}</td>
+          <td data-sort-value="{{ (item.unit_cost)|default('') }}">S/ {{ '%.2f'|format(item.unit_cost|float) }}</td>
+          <td data-sort-value="{{ (item.sale_price if item.sale_price is not none else '')|default('') }}">{{ ('S/ %.2f'|format(item.sale_price|float)) if item.sale_price is not none else 'Sin definir' }}</td>
           <td>
             <span class="ui-state {{ 'ui-state--active' if item.active else 'ui-state--inactive' }}">{{ 'Activo' if
               item.active else 'Inactivo' }}</span>

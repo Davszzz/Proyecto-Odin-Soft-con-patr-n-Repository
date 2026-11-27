@@ -20,29 +20,31 @@ action_link, action_post with context %} {% block title %}Órdenes{% endblock %}
     </div>
     <label class="ui-search"><i class="bi bi-search" aria-hidden="true"></i><span class="visually-hidden">Buscar
         órdenes</span><input class="form-control" type="search" placeholder="Buscar orden o cliente"
-        data-ui-search="orderTable" /></label>
+        data-ui-search="orderTable"
+        data-search-columns="0,1,2"
+        data-search-filters='{"Servicio": 3, "Estado": 5, "Prioridad": 4}' /></label>
   </div>
   <div class="table-responsive">
-    <table class="table table-hover ui-table" id="orderTable">
+    <table data-sort-column="6" data-sort-direction="desc" class="table table-hover ui-table" id="orderTable">
       <thead>
         <tr>
-          <th>Orden</th>
-          <th>Cliente</th>
-          <th>Equipo</th>
-          <th>Servicio</th>
-          <th>Prioridad</th>
-          <th>Estado</th>
-          <th>Fecha</th>
-          <th class="text-end">Acciones</th>
+          <th data-sort-type="number">Orden</th>
+          <th data-sort-type="text">Cliente</th>
+          <th data-sort-type="text">Equipo</th>
+          <th data-sort-type="text">Servicio</th>
+          <th data-sort-type="text">Prioridad</th>
+          <th data-sort-type="text">Estado</th>
+          <th data-sort-type="date">Fecha</th>
+          <th data-sort-type="none" class="text-end">Acciones</th>
         </tr>
       </thead>
       <tbody>
         {% for order in orders %}
         <tr>
-          <td>
+          <td data-sort-value="{{ (order.order_number)|default('') }}">
             <strong class="text-primary">#{{ order.order_number }}</strong>
           </td>
-          <td>
+          <td data-sort-value="{{ ((order.users or {}).full_name or '')|default('') }}">
             <div class="ui-title-cell">
               {{ (order.users or {}).full_name or '—' }}
             </div>
@@ -61,7 +63,7 @@ action_link, action_post with context %} {% block title %}Órdenes{% endblock %}
             <span class="status-pill status-{{ (order.order_statuses or {}).code or 'REGISTERED' }}">{{
               (order.order_statuses or {}).name or '—' }}</span>
           </td>
-          <td>{{ order.created_at|date_pe }}</td>
+          <td data-sort-value="{{ (order.created_at)|default('') }}">{{ order.created_at|date_pe }}</td>
           <td class="text-end">
             <div class="ui-action-group">
               {{ action_post(url_for('admin.open_order_for_review', order_id=order.id),

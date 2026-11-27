@@ -11,6 +11,7 @@ from flask import (
 )
 
 from app.repositories.user_repository import UserRepository
+from app.services.audit_service import AuditService
 from app.services.sales_request_service import SalesRequestService
 from app.services.sale_service import SaleService
 from app.services.sales_document_service import SalesDocumentService
@@ -148,7 +149,8 @@ def _render_request_form(record=None, *, editing=False, fields=None, lines=None,
                                              'unit_price': '0.00'}],
                            editing=editing, choices=choices, section='sales_requests',
                            origin_order=origin_order, origin_client=origin_client,
-                           origin_warnings=origin_warnings or [])
+                           origin_warnings=origin_warnings or [],
+                           audit_info=AuditService().for_record("sales_requests", record["id"]) if editing and record else None)
 
 
 @admin_sales_bp.route('/solicitudes/desde-orden/<order_id>', methods=['GET', 'POST'])
@@ -237,7 +239,8 @@ def request_detail(request_id):
         abort(404)
     return render_template('admin/sales_request_detail.html', record=record,
                            linked_sale=sale_service.find_by_request(request_id),
-                           subtotal=_subtotal(record['details']), section='sales_requests')
+                           subtotal=_subtotal(record['details']), section='sales_requests',
+                           audit_info=AuditService().for_record('sales_requests', request_id))
 
 
 @admin_sales_bp.post('/solicitudes/<request_id>/<action>')
@@ -288,7 +291,8 @@ def sale_detail(sale_id):
     document = next((d for d in document_service.list_all()
                      if str(d['sale_id']) == str(sale_id)), None)
     return render_template('admin/sale_detail.html', sale=sale, document=document,
-                           subtotal=_subtotal(sale['details']), section='sales')
+                           subtotal=_subtotal(sale['details']), section='sales',
+                           audit_info=AuditService().for_record('sales', sale_id))
 
 
 @admin_sales_bp.post('/ventas/<sale_id>/notas')
@@ -325,7 +329,8 @@ def documents():
 def _render_document_form(sale, *, record=None, fields=None, editing=False):
     return render_template('admin/sale_document_form.html', sale=sale,
                            record=record or {}, fields=fields or {},
-                           editing=editing, section='documents')
+                           editing=editing, section='documents',
+                           audit_info=AuditService().for_record('sale_documents', record['id']) if editing and record else None)
 
 
 @admin_sales_bp.route('/ventas/<sale_id>/comprobante/nuevo', methods=['GET', 'POST'])
@@ -380,7 +385,8 @@ def document_detail(document_id):
     if not doc:
         abort(404)
     return render_template('admin/sale_document_detail.html', doc=doc,
-                           subtotal=_subtotal(doc['details']), section='documents')
+                           subtotal=_subtotal(doc['details']), section='documents',
+                           audit_info=AuditService().for_record('sale_documents', document_id))
 
 
 @admin_sales_bp.post('/comprobantes/<document_id>/<action>')

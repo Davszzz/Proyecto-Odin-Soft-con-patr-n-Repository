@@ -1,0 +1,19 @@
+{# Componente de solo lectura. audit_info proviene de AuditService, nunca del formulario. #}
+{% macro audit_fields(info) %}
+  {% if info and info.available %}
+  <dl class="row g-3 mb-0 small">
+    <div class="col-12 col-sm-6"><dt class="text-muted fw-normal">Creado por</dt><dd class="fw-semibold mb-0 text-break">{{ info.created_by }}</dd></div>
+    <div class="col-12 col-sm-6"><dt class="text-muted fw-normal">Fecha de creación</dt><dd class="fw-semibold mb-0">{{ info.created_at|datetime_pe if info.created_at else 'No registrada' }}</dd></div>
+    <div class="col-12 col-sm-6"><dt class="text-muted fw-normal">Modificado por</dt><dd class="fw-semibold mb-0 text-break">{{ info.updated_by }}</dd></div>
+    <div class="col-12 col-sm-6"><dt class="text-muted fw-normal">Última modificación</dt><dd class="fw-semibold mb-0">{{ info.updated_at|datetime_pe if info.updated_at else 'No registrada' }}</dd></div>
+  </dl>
+  {% else %}
+  <p class="text-muted small mb-0" role="status">Información de auditoría no disponible. Comprueba la migración de auditoría o vuelve a consultar el registro.</p>
+  {% endif %}
+{% endmacro %}
+{% macro audit_panel(info) %}
+<section class="ui-surface mt-4 mb-3" aria-label="Información de auditoría">
+  <div class="ui-surface__head"><h2><i class="bi bi-clock-history me-2" aria-hidden="true"></i>Información de auditoría</h2></div>
+  <div class="ui-surface__body">{{ audit_fields(info) }}</div>
+</section>
+{% endmacro %}

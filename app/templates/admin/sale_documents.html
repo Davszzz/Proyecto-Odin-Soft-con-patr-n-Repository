@@ -24,37 +24,39 @@ block content %}
         type="search"
         placeholder="Serie, número o comprador"
         data-ui-search="commercialDocumentsTable"
+        data-search-columns="1,2"
+        data-search-filters='{"Tipo": 0, "Estado": 4, "Período": "period"}'
     /></label>
   </div>
   <div class="table-responsive">
-    <table class="table table-hover ui-table" id="commercialDocumentsTable">
+    <table data-sort-column="5" data-sort-direction="desc" class="table table-hover ui-table" id="commercialDocumentsTable">
       <thead>
         <tr>
-          <th>Tipo</th>
-          <th>Número</th>
-          <th>Comprador</th>
-          <th>Total</th>
-          <th>Estado</th>
-          <th>Fecha</th>
-          <th class="text-end">Acciones</th>
+          <th data-sort-type="text">Tipo</th>
+          <th data-sort-type="text">Número</th>
+          <th data-sort-type="text">Comprador</th>
+          <th data-sort-type="number">Total</th>
+          <th data-sort-type="text">Estado</th>
+          <th data-sort-type="date">Fecha</th>
+          <th data-sort-type="none" class="text-end">Acciones</th>
         </tr>
       </thead>
       <tbody>
         {% for doc in records %}
-        <tr>
+        <tr data-search-period="{{ (doc.created_at|date_pe)[3:] if doc.created_at else 'Sin fecha' }}">
           <td>{{ doc.document_type|capitalize }}</td>
           <td class="ui-title-cell">
             {{ doc.series }}-{{ doc.document_number }}
           </td>
           <td>{{ doc.buyer_name }}</td>
-          <td class="text-nowrap">S/ {{ doc.total|commercial_money }}</td>
+          <td data-sort-value="{{ (doc.total)|default('') }}" class="text-nowrap">S/ {{ doc.total|commercial_money }}</td>
           <td>
             <span
               class="ui-state {{ 'ui-state--active' if doc.status == 'EMITIDO' else 'ui-state--inactive' if doc.status == 'ANULADO' else 'ui-state--low' }}"
               >{{ doc.status|capitalize }}</span
             >
           </td>
-          <td>{{ doc.created_at|date_pe }}</td>
+          <td data-sort-value="{{ (doc.created_at)|default('') }}">{{ doc.created_at|date_pe }}</td>
           <td class="text-end">
             <div class="ui-action-group">
               {{

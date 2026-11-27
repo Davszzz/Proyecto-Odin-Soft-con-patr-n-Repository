@@ -130,4 +130,7 @@ endblock %} {% block content %}
       cancelada. No admite nuevos cambios.</span>{% endif %}
   </div>
 </section>
+
+{% from 'admin/_audit_info.html' import audit_panel %}
+{{ audit_panel(audit_info) }}
 {% endblock %}

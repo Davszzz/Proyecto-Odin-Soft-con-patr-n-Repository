@@ -166,4 +166,7 @@ record.request_number }}{% endblock %} {% block content %}
     >{% endif %}
   </div>
 </section>
+
+{% from 'admin/_audit_info.html' import audit_panel %}
+{{ audit_panel(audit_info) }}
 {% endblock %}

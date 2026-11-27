@@ -79,4 +79,7 @@ else 'Nuevo servicio' }}{% endblock %} {% block content %}
     </form>
   </div>
 </div>
+
+{% from 'admin/_audit_info.html' import audit_panel %}
+{% if editing %}{{ audit_panel(audit_info) }}{% endif %}
 {% endblock %}

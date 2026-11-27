@@ -133,4 +133,7 @@ doc.document_number }}{% endblock %} {% block content %}
         class="bi bi-cart-check"></i> Ver venta</a>
   </div>
 </section>
+
+{% from 'admin/_audit_info.html' import audit_panel %}
+{{ audit_panel(audit_info) }}
 {% endblock %}

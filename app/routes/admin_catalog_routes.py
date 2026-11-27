@@ -13,6 +13,7 @@ from flask import (
 )
 
 from app.repositories.user_repository import UserRepository
+from app.services.audit_service import AuditService
 from app.services.inventory_service import InventoryService
 from app.services.service_catalog_service import ServiceCatalogService
 from app.services.supplier_service import SupplierService
@@ -109,6 +110,7 @@ def supplier_edit(supplier_id):
             return result
         supplier = {**supplier, **values}
     return render_template("admin/supplier_form.html", supplier=supplier,
+                           audit_info=AuditService().for_record("suppliers", supplier_id),
                            editing=True, section="suppliers")
 
 
@@ -161,6 +163,7 @@ def inventory_edit(item_id):
             return result
         item = {**item, **values}
     return render_template("admin/inventory_form.html", item=item, editing=True,
+                           audit_info=AuditService().for_record("inventory_items", item_id),
                            suppliers=_supplier_options(item.get("supplier_id")),
                            section="inventory")
 
@@ -207,6 +210,7 @@ def service_edit(service_id):
             return result
         service = {**service, **values}
     return render_template("admin/service_form.html", service=service, editing=True,
+                           audit_info=AuditService().for_record("service_types", service_id),
                            section="services")
 
 
